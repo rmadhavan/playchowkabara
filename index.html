@@ -1,0 +1,2424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#FFF1F5" />
+  <meta name="description" content="Play Chowka Bara, the classic South Indian race game, online with friends or against the computer." />
+  <link rel="canonical" href="https://playchowkabara.com/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Play Chowka Bara" />
+  <meta property="og:description" content="Throw the cowrie shells and race to the lotus in this online Chowka Bara game." />
+  <meta property="og:url" content="https://playchowkabara.com/" />
+  <meta name="twitter:card" content="summary" />
+  <title>Play Chowka Bara</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/shared.css" />
+  <style>
+    /* ---- Top bar ---- */
+    .topbar .title { padding-right: 0; }
+    .sound-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 8px 12px;
+      background: white;
+      border: 2px solid var(--lavender);
+      border-radius: var(--radius-btn);
+      font-size: 20px;
+      color: var(--purple-deep);
+      transition: transform 0.18s var(--bounce);
+    }
+    .sound-btn:active { transform: scale(0.9); }
+
+    /* ---- Controls ---- */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 420px;
+      margin: 0 auto 12px;
+    }
+    .control-row { display: flex; align-items: center; gap: 10px; }
+    .control-row.hidden { display: none; }
+    .control-row .control-label {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--ink-soft);
+      flex: 0 0 auto;
+      width: 56px;
+    }
+    .seg {
+      display: inline-flex;
+      flex: 1 1 auto;
+      background: white;
+      border: 2px solid var(--lavender);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .seg .seg-btn {
+      flex: 1 1 0;
+      min-height: 38px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--purple-deep);
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+      transition: background 0.18s ease, color 0.18s ease, transform 0.18s var(--bounce);
+    }
+    .seg .seg-btn:active { transform: scale(0.94); }
+    .seg .seg-btn.selected {
+      background: linear-gradient(135deg, var(--pink-hot), var(--purple));
+      color: white;
+      box-shadow: 0 3px 8px rgba(168, 85, 247, 0.3);
+    }
+    .controls.locked .seg { opacity: 0.45; pointer-events: none; filter: saturate(0.6); }
+
+    /* ---- Board ---- */
+    .board-wrap {
+      position: relative;
+      flex: 1 1 340px;
+      max-width: min(96vw, 560px);
+      aspect-ratio: 1 / 1;
+      border-radius: var(--radius-card);
+      padding: 7px;
+      background: conic-gradient(from 210deg, #C2185B, #F5A623 22%, #00897B 45%, #7B1FA2 68%, #C2185B 90%, #C2185B);
+      box-shadow: 0 16px 30px rgba(27, 17, 71, 0.42), 0 0 0 2px #E8B84B;
+    }
+    .board-wrap::before,
+    .board-wrap::after {
+      content: '🪷';
+      position: absolute;
+      top: -13px;
+      font-size: clamp(16px, 3vw, 26px);
+      z-index: 3;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+    }
+    .board-wrap::before { left: 4px; transform: rotate(-14deg); }
+    .board-wrap::after  { right: 4px; content: '🪔'; transform: rotate(14deg); }
+    .board-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #171041;
+    }
+    .board-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    /* ---- Pawn tokens ---- */
+    .token {
+      position: absolute;
+      width: 7.2%;
+      height: 8.7%;
+      transform: translate(-50%, -64%) rotate(var(--lean, 0deg));
+      transition: left 0.22s ease, top 0.22s ease, transform 0.22s ease;
+      z-index: 5;
+      cursor: default;
+      filter: drop-shadow(0 3px 3px rgba(0,0,0,0.32));
+    }
+    .token .disc {
+      position: absolute;
+      left: 50%; bottom: -4%;
+      width: 72%; height: 18%;
+      transform: translateX(-50%);
+      background: radial-gradient(ellipse at center, rgba(0,0,0,0.3), transparent 70%);
+      border-radius: 50%;
+    }
+    .token-inner {
+      display: block;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      animation: idleBob 2.4s ease-in-out infinite;
+    }
+    .token-inner .pawn-body { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .token-inner .pawn-face {
+      position: absolute;
+      left: 50%; top: 38%;
+      transform: translate(-50%, -50%);
+      width: 52%; height: 45%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 50%;
+      font-size: clamp(11px, 3.6vw, 19px);
+      line-height: 1;
+    }
+    .token-inner .pawn-face img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    @keyframes idleBob {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50%      { transform: translateY(-5%) scale(1.02); }
+    }
+    /* Only the pawns you are allowed to move bounce — turn cue + legal-move cue in one. */
+    .token.movable { cursor: pointer; z-index: 7; }
+    .token.movable .token-inner { animation: eager 0.72s ease-in-out infinite; }
+    @keyframes eager {
+      0%, 100% { transform: translateY(0) scale(1); }
+      40%      { transform: translateY(-26%) scale(1.06, 0.96); }
+      70%      { transform: translateY(0) scale(0.98, 1.03); }
+    }
+    .token .ring {
+      position: absolute;
+      left: 50%; top: 44%;
+      width: 128%; height: 108%;
+      transform: translate(-50%, -50%) scale(0.7);
+      border-radius: 50%;
+      border: 3px dashed var(--pc, #F43F8A);
+      opacity: 0;
+      transition: opacity 0.16s ease, transform 0.16s var(--bounce);
+      pointer-events: none;
+    }
+    .token.selected { z-index: 9; }
+    .token.selected .ring { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    @keyframes ringSpin { to { transform: rotate(360deg); } }
+    .token .pick-arrow {
+      position: absolute;
+      left: 50%; top: -52%;
+      transform: translateX(-50%);
+      font-size: clamp(12px, 3.4vw, 18px);
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.16s ease;
+      pointer-events: none;
+    }
+    .token.selected .pick-arrow { opacity: 1; animation: pointDown 0.8s ease-in-out infinite; }
+    @keyframes pointDown { 0%,100%{ transform: translateX(-50%) translateY(0);} 50%{ transform: translateX(-50%) translateY(5px);} }
+    @keyframes hopAnim {
+      0%   { transform: translateY(0) scale(1, 1); }
+      30%  { transform: translateY(-58%) scale(0.86, 1.18); }
+      65%  { transform: translateY(0) scale(1.16, 0.82); }
+      100% { transform: translateY(0) scale(1, 1); }
+    }
+    @keyframes boopAway {
+      0%   { transform: translateY(0) scale(1); opacity: 1; }
+      45%  { transform: translateY(-70%) scale(1.18) rotate(-16deg); opacity: 1; }
+      100% { transform: translateY(-30%) scale(0.35) rotate(22deg); opacity: 0; }
+    }
+    @keyframes landPop {
+      0%   { transform: scale(0.3); opacity: 0; }
+      60%  { transform: scale(1.16); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes bloom {
+      0%   { transform: scale(1); opacity: 1; }
+      50%  { transform: scale(1.5) rotate(180deg); opacity: 1; }
+      100% { transform: scale(0.2) rotate(360deg); opacity: 0; }
+    }
+
+    /* ---- Floating "BOOP!" / "CHOWKA!" shouts over the board ---- */
+    .shout {
+      position: absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Baloo 2', cursive;
+      font-weight: 800;
+      font-size: clamp(15px, 4.4vw, 26px);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 999px;
+      white-space: nowrap;
+      z-index: 12;
+      pointer-events: none;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+      animation: shoutUp 1.1s ease-out forwards;
+    }
+    @keyframes shoutUp {
+      0%   { transform: translate(-50%, -50%) scale(0.4); opacity: 0; }
+      25%  { transform: translate(-50%, -70%) scale(1.12); opacity: 1; }
+      70%  { transform: translate(-50%, -85%) scale(1); opacity: 1; }
+      100% { transform: translate(-50%, -130%) scale(0.9); opacity: 0; }
+    }
+
+    /* ---- Side panel ---- */
+    .play-area {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: center;
+    }
+    .side-panel {
+      flex: 1 1 190px;
+      min-width: 176px;
+      max-width: 260px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    /* ---- Player strip (names + how many are home) ---- */
+    .player-strip { display: flex; flex-direction: column; gap: 7px; }
+    .p-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 11px 6px 6px;
+      background: rgba(255,255,255,0.78);
+      border: 3px solid transparent;
+      border-radius: 999px;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s var(--bounce), opacity 0.2s ease;
+    }
+    /* Everyone but the active player steps back, so the turn reads at a glance. */
+    .p-row:not(.turn) { opacity: 0.5; filter: saturate(0.65); }
+    .p-row.turn {
+      border-color: var(--pc, #F43F8A);
+      background: linear-gradient(100deg, #fff, color-mix(in srgb, var(--pc, #F43F8A) 20%, #fff));
+      transform: scale(1.06);
+      box-shadow: 0 10px 22px color-mix(in srgb, var(--pc, #F43F8A) 42%, transparent),
+                  0 0 0 5px color-mix(in srgb, var(--pc, #F43F8A) 22%, transparent);
+    }
+    /* Glow pulses via opacity on a pseudo-element: animating box-shadow repaints every frame. */
+    .p-row.turn::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 999px;
+      box-shadow: 0 0 0 6px color-mix(in srgb, var(--pc, #F43F8A) 13%, transparent),
+                  0 13px 28px color-mix(in srgb, var(--pc, #F43F8A) 30%, transparent);
+      pointer-events: none;
+      opacity: 0;
+      will-change: opacity;
+      animation: turnBreathe 1.7s ease-in-out infinite;
+    }
+    @keyframes turnBreathe {
+      0%, 100% { opacity: 0; }
+      50%      { opacity: 1; }
+    }
+    .p-face {
+      width: 42px; height: 42px;
+      flex: 0 0 42px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; line-height: 1;
+      background: radial-gradient(circle at 50% 34%, #fff, #ffeaf4 66%, var(--pc, #F43F8A) 155%);
+      border: 3px solid var(--pc, #F43F8A);
+    }
+    .p-row.turn .p-face {
+      box-shadow: 0 0 0 3px #fff, 0 0 0 7px var(--pc, #F43F8A);
+      animation: turnPulse 1.1s ease-in-out infinite;
+    }
+    @keyframes turnPulse { 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.12);} }
+    .p-turn {
+      display: none;
+      flex: 0 0 auto;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--pc, #F43F8A);
+      color: #fff;
+      font-family: 'Baloo 2', cursive;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      white-space: nowrap;
+    }
+    .p-row.turn .p-turn { display: inline-block; }
+    .p-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-family: 'Baloo 2', cursive;
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--purple-deep);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .p-pips { display: flex; gap: 3px; flex: 0 0 auto; }
+    .p-pips i {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: rgba(126,34,206,0.16);
+      transition: background 0.3s ease, transform 0.3s var(--bounce);
+    }
+    .p-pips i.on { background: var(--pc, #F43F8A); transform: scale(1.25); }
+
+    /* ---- Shell tray ---- */
+    .shell-tray {
+      position: relative;
+      width: 100%;
+      height: 168px;
+      border-radius: 22px;
+      background:
+        radial-gradient(130% 90% at 50% 130%, rgba(255,255,255,0.32), transparent 60%),
+        linear-gradient(180deg, #F5A623 0%, #E08A1E 55%, #C2185B 140%);
+      border: 3px solid #E8B84B;
+      box-shadow: inset 0 6px 14px rgba(255,255,255,0.3), inset 0 -12px 18px rgba(120,30,60,0.3), 0 10px 22px rgba(27,17,71,0.3);
+      overflow: hidden;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .shell-tray.disabled { pointer-events: none; }
+    .shell-tray.disabled .shells { opacity: 0.5; filter: saturate(0.6); }
+    .shell-tray.again {
+      border-color: #FDE047;
+      box-shadow: inset 0 6px 14px rgba(255,255,255,0.4), 0 0 0 4px rgba(253,224,71,0.55), var(--shadow-card);
+      animation: againGlow 0.9s ease-in-out infinite;
+    }
+    @keyframes againGlow {
+      0%,100% { box-shadow: inset 0 6px 14px rgba(255,255,255,0.4), 0 0 0 3px rgba(253,224,71,0.45), var(--shadow-card); }
+      50%     { box-shadow: inset 0 6px 14px rgba(255,255,255,0.4), 0 0 0 8px rgba(253,224,71,0.28), var(--shadow-card); }
+    }
+    .shells {
+      position: absolute;
+      left: 0; right: 0; top: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 3px;
+      justify-items: center;
+      padding: 0 8px;
+    }
+    .shell { width: 100%; max-width: 52px; }
+    .shell svg { width: 100%; height: auto; display: block; filter: drop-shadow(0 2px 3px rgba(120,70,10,0.28)); }
+    .shell .f-mouth { display: none; }
+    .shell.mouth .f-mouth { display: block; }
+    .shell.mouth .f-hump { display: none; }
+    @keyframes shellTumble {
+      0%   { transform: translate(-46px, 6px) rotate(0deg) scale(0.86); }
+      30%  { transform: translate(-20px, -16px) rotate(200deg) scale(1.04); }
+      55%  { transform: translate(8px, 4px) rotate(360deg) scale(0.94); }
+      78%  { transform: translate(-4px, -8px) rotate(500deg) scale(1.02); }
+      100% { transform: translate(0, 0) rotate(720deg) scale(1); }
+    }
+    .throw-num {
+      position: absolute;
+      left: 50%; top: 62%;
+      transform: translate(-50%, -50%);
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 34%, #FEF9C3, #FDE047 70%);
+      border: 3px solid #F59E0B;
+      color: #92400E;
+      font-family: 'Baloo 2', cursive;
+      font-weight: 800;
+      z-index: 4;
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: 0 8px 18px rgba(180,110,30,0.35);
+    }
+    .throw-num .n { font-size: 34px; line-height: 1; }
+    .throw-num .w { font-size: 11px; letter-spacing: 0.06em; }
+    .throw-num.show { animation: numPop 0.45s var(--bounce) forwards; }
+    @keyframes numPop {
+      0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.3); }
+      60%  { opacity: 1; transform: translate(-50%,-50%) scale(1.18); }
+      100% { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    }
+    .tray-hint {
+      position: absolute;
+      left: 0; right: 0; bottom: 7px;
+      text-align: center;
+      font-family: 'Baloo 2', cursive;
+      font-weight: 700;
+      font-size: 13.5px;
+      color: #FFF3D6;
+      text-shadow: 0 1px 2px rgba(90,20,40,0.6);
+      z-index: 5;
+      padding: 0 6px;
+    }
+    .tray-hint .tapper { display: inline-block; animation: pulseScale 1.1s ease-in-out infinite; }
+    @keyframes pulseScale { 0%,100%{ transform: scale(1);} 50%{ transform: scale(1.09);} }
+
+    /* ---- Avatars ---- */
+    .av-img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center;
+      pointer-events: none;
+    }
+    .token-inner .av-img { width: 92%; }
+    .p-face .av-img { width: 88%; }
+    .result-avatars .av-img { width: 46px; display: inline-block; vertical-align: middle; }
+
+    .av-char { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+    .p-face .av-char, .icon-chip .ic-face .av-char, .avatar-opt .av-char { width: 100%; height: 100%; }
+    .result-avatars .av-char { width: 54px; height: 60px; display: inline-block; vertical-align: middle; }
+    .token-inner .pawn-char { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+    /* ---- Icon chips + picker ---- */
+    .icon-chips { display: flex; flex: 1 1 auto; flex-wrap: wrap; gap: 8px; }
+    .icon-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 40px;
+      padding: 4px 12px 4px 4px;
+      background: white;
+      border: 2px solid var(--lavender);
+      border-radius: 999px;
+      color: var(--purple-deep);
+      font-weight: 800;
+      font-size: 13px;
+      transition: transform 0.18s var(--bounce);
+    }
+    .icon-chip:active { transform: scale(0.94); }
+    .icon-chip .ic-face {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px; line-height: 1;
+      background: radial-gradient(circle at 50% 34%, #fff, #ffeaf4 66%, var(--pc, #F43F8A) 155%);
+      border: 2px solid var(--pc, #F43F8A);
+    }
+    .icon-chip .ic-face .av-img { width: 88%; }
+    .controls.locked .icon-chip { opacity: 0.45; pointer-events: none; filter: saturate(0.6); }
+
+    .picker-panel { padding: 16px 14px; max-height: calc(100vh - 40px); display: flex; flex-direction: column; }
+    .picker-panel h2 { font-size: 22px; margin-bottom: 2px; }
+    .picker-panel .actions { margin-top: 10px; }
+
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+      gap: 8px;
+      margin: 10px 0 4px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 2px;
+      min-height: 0;
+    }
+    .avatar-opt {
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px; line-height: 1;
+      background: radial-gradient(circle at 50% 34%, #fff, #ffeaf4 66%, var(--pc, #F43F8A) 160%);
+      border: 2px solid var(--pc, #F43F8A);
+      transition: transform 0.16s var(--bounce), box-shadow 0.16s ease;
+    }
+    .avatar-opt:active { transform: scale(0.92); }
+    .avatar-opt.selected { box-shadow: 0 0 0 3px rgba(168,85,247,0.45); }
+    .avatar-opt .av-img { width: 86%; }
+
+    /* ---- Actions + result ---- */
+    .actions { display: flex; gap: 12px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+    .actions .btn { flex: 1 1 140px; max-width: 220px; }
+    .modal-panel .result-avatars { font-size: 54px; text-align: center; margin: 4px 0 8px; }
+    .modal-panel .result-avatars .winner { display: inline-block; animation: winnerCheer 0.9s ease-in-out infinite; }
+    @keyframes winnerCheer {
+      0%, 100% { transform: translateY(0) rotate(-8deg); }
+      50%      { transform: translateY(-10px) rotate(8deg); }
+    }
+
+    /* ---- Festival backdrop ---- */
+    body {
+      background:
+        radial-gradient(120% 80% at 50% 0%, rgba(245,166,35,0.28), transparent 60%),
+        linear-gradient(180deg, #FFF4DC 0%, #FFE3C4 42%, #FBC9AE 100%);
+    }
+    .garden { position: fixed; inset: 100px 0 0 0; z-index: -1; overflow: hidden; pointer-events: none; }
+    .garden .deco { position: absolute; line-height: 1; will-change: transform; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.12)); }
+    .garden .flower {
+      font-size: clamp(20px, 4.4vw, 40px);
+      transform-origin: bottom center;
+      animation: sway var(--dur, 4s) ease-in-out var(--delay, 0s) infinite;
+    }
+    @keyframes sway { 0%,100%{ transform: rotate(-8deg);} 50%{ transform: rotate(8deg);} }
+
+    /* Toran — the marigold-and-leaf garland strung across a festival doorway. */
+    .toran { position: absolute; top: 0; display: flex; gap: 7px; align-items: flex-start; }
+    .toran.left { left: 10px; }
+    .toran.right { right: 10px; }
+    .toran i {
+      display: block;
+      width: 12px;
+      border-radius: 0 0 60% 60%;
+      background: linear-gradient(180deg, #F59E0B, #EA580C);
+      box-shadow: inset 0 -3px 4px rgba(120,40,0,0.28);
+      transform-origin: top center;
+      animation: toranSway 3.4s ease-in-out infinite;
+    }
+    .toran i:nth-child(even) { background: linear-gradient(180deg, #FDE047, #F59E0B); }
+    .toran i::after {
+      content: '';
+      display: block;
+      width: 7px; height: 7px;
+      margin: 0 auto;
+      border-radius: 50%;
+      background: #16A34A;
+      transform: translateY(3px);
+    }
+    @keyframes toranSway { 0%,100%{ transform: rotate(-3.5deg);} 50%{ transform: rotate(3.5deg);} }
+
+    /* Diya — a clay lamp with a live flame and a warm pool of light. */
+    .diya { position: absolute; width: 42px; height: 40px; }
+    .diya .glow {
+      position: absolute; left: 50%; bottom: 2px;
+      width: 86px; height: 86px;
+      transform: translateX(-50%);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,196,84,0.5), rgba(255,170,60,0) 68%);
+      animation: glowPulse 2.6s ease-in-out infinite;
+    }
+    .diya .flame {
+      position: absolute; left: 50%; bottom: 15px;
+      width: 13px; height: 23px;
+      border-radius: 50% 50% 45% 45% / 62% 62% 38% 38%;
+      background: linear-gradient(180deg, #FFF7CC 0%, #FDBA24 45%, #F97316 100%);
+      box-shadow: 0 0 12px rgba(253,186,36,0.9);
+      transform-origin: bottom center;
+      animation: flicker 1.5s ease-in-out infinite;
+    }
+    .diya .bowl {
+      position: absolute; left: 0; bottom: 0;
+      width: 42px; height: 17px;
+      border-radius: 0 0 46% 46% / 0 0 100% 100%;
+      background: linear-gradient(180deg, #C2410C 0%, #7C2D12 100%);
+      box-shadow: inset 0 3px 5px rgba(255,180,120,0.35);
+    }
+    @keyframes flicker {
+      0%,100% { transform: translateX(-50%) scale(1) rotate(-2deg); }
+      35%     { transform: translateX(-50%) scale(1.12, 0.9) rotate(2deg); }
+      70%     { transform: translateX(-50%) scale(0.93, 1.1) rotate(-1deg); }
+    }
+    @keyframes glowPulse { 0%,100%{ opacity: 0.7; } 50%{ opacity: 1; } }
+
+    /* Rangoli — the chalk-and-petal wheel drawn at the threshold. */
+    .rangoli {
+      position: absolute;
+      border-radius: 50%;
+      background: conic-gradient(#F43F8A 0 30deg, #FDE047 30deg 60deg, #38BDF8 60deg 90deg,
+                                #F97316 90deg 120deg, #A855F7 120deg 150deg, #22C55E 150deg 180deg,
+                                #F43F8A 180deg 210deg, #FDE047 210deg 240deg, #38BDF8 240deg 270deg,
+                                #F97316 270deg 300deg, #A855F7 300deg 330deg, #22C55E 330deg 360deg);
+      -webkit-mask: radial-gradient(circle, transparent 20%, #000 22%, #000 62%, transparent 64%);
+      mask: radial-gradient(circle, transparent 20%, #000 22%, #000 62%, transparent 64%);
+      opacity: 0.3;
+      animation: rangoliSpin var(--dur, 44s) linear infinite;
+    }
+    @keyframes rangoliSpin { to { transform: rotate(360deg); } }
+
+    /* Marigold petals drifting down from the garlands. */
+    .bell {
+      position: absolute;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform-origin: 50% 0;
+      animation: bellSwing var(--dur, 3.4s) ease-in-out var(--delay, 0s) infinite;
+    }
+    .bell .cord {
+      width: 1.5px;
+      height: var(--drop, 40px);
+      background: linear-gradient(180deg, rgba(146,64,14,0.75), rgba(120,53,15,0.45));
+      border-radius: 2px;
+    }
+    .bell .clapper {
+      font-size: clamp(15px, 2.7vw, 26px);
+      line-height: 1;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,0.28));
+    }
+    @keyframes bellSwing {
+      0%, 100% { transform: rotate(-7deg); }
+      50%      { transform: rotate(7deg); }
+    }
+
+    /* Grass along the courtyard floor. */
+    .ground {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 74px;
+      background:
+        radial-gradient(ellipse 14px 32px at 50% 100%, #4E9E32 0 62%, transparent 64%) 0 0/29px 74px repeat-x,
+        radial-gradient(ellipse 11px 23px at 50% 100%, #74C64E 0 62%, transparent 64%) 14px 0/23px 74px repeat-x,
+        linear-gradient(180deg, rgba(116,198,78,0) 0%, rgba(78,158,50,0.5) 100%);
+    }
+
+    .peacock {
+      position: absolute;
+      font-size: clamp(44px, 7.6vw, 82px);
+      line-height: 1;
+      transform-origin: bottom center;
+      filter: drop-shadow(0 3px 4px rgba(0,0,0,0.22));
+      animation: peacockDance var(--dur, 3.4s) ease-in-out var(--delay, 0s) infinite;
+    }
+    @keyframes peacockDance {
+      0%, 100% { transform: rotate(-5deg) translateY(0); }
+      25%      { transform: rotate(0deg) translateY(-7px); }
+      50%      { transform: rotate(5deg) translateY(0); }
+      75%      { transform: rotate(0deg) translateY(-4px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .garden .deco, .garden .diya .flame, .garden .diya .glow,
+      .garden .toran i, .garden .rangoli, .garden .bell, .garden .peacock,
+      .token-inner, .p-row.turn, .p-row.turn .p-face { animation: none !important; }
+    }
+
+    /* ---- Fireworks ---- */
+    .fw-spark {
+      position: fixed;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      z-index: 60;
+      pointer-events: none;
+      will-change: transform, opacity;
+    }
+    .fw-flash {
+      position: fixed;
+      width: 70px; height: 70px;
+      border-radius: 50%;
+      z-index: 59;
+      pointer-events: none;
+      background: radial-gradient(circle, #FFF6D8, rgba(255,213,79,0.5) 45%, rgba(255,213,79,0) 72%);
+    }
+
+    /* ---- Playing mode: board-first, fills the viewport ---- */
+    .topbar .close-x { display: none; color: var(--pink-hot); border-color: var(--pink-soft); }
+    #gameActions { display: none; }
+    body.playing { overflow: hidden; overscroll-behavior: none; }
+    /* The board owns the screen while playing, so idle scenery stops repainting. */
+    body.playing .garden .deco,
+    body.playing .garden .toran i,
+    body.playing .garden .bell,
+    body.playing .garden .diya .flame,
+    body.playing .garden .diya .glow,
+    body.playing .garden .rangoli,
+    body.playing .garden .peacock { animation: none !important; }
+    body.playing .page {
+      width: 100vw; max-width: none;
+      height: 100dvh;
+      padding: 4px;
+      overflow: hidden;
+    }
+    body.playing .controls { display: none; }
+    body.playing .topbar {
+      position: fixed; inset: 0 0 auto;
+      height: 0; padding: 0; z-index: 30; pointer-events: none;
+    }
+    body.playing .topbar #topHome,
+    body.playing .topbar .title { display: none; }
+    body.playing .topbar .close-x {
+      display: inline-flex;
+      position: fixed;
+      top: max(8px, env(safe-area-inset-top));
+      left: max(8px, env(safe-area-inset-left));
+      min-height: 46px;
+      background: rgba(255,255,255,0.94);
+      box-shadow: 0 5px 14px rgba(59,31,71,0.2);
+      pointer-events: auto; z-index: 31;
+    }
+    body.playing .topbar .sound-btn,
+    body.playing .topbar .info-btn {
+      position: fixed;
+      top: max(8px, env(safe-area-inset-top));
+      right: max(8px, env(safe-area-inset-right));
+      background: rgba(255,255,255,0.94);
+      box-shadow: 0 5px 14px rgba(59,31,71,0.2);
+      pointer-events: auto; z-index: 31;
+    }
+    body.playing .topbar .info-btn { right: calc(max(8px, env(safe-area-inset-right)) + 52px); }
+    body.playing .play-area {
+      --panel-w: clamp(196px, 25vw, 320px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--panel-w);
+      gap: 10px;
+      width: 100%; height: 100%;
+      align-items: center; justify-items: center;
+    }
+    body.playing .board-wrap {
+      flex: none;
+      width: min(calc(100dvh - 16px), calc(100vw - var(--panel-w) - 30px), 940px);
+      max-width: none;
+      padding: 5px;
+    }
+    body.playing .side-panel { width: 100%; min-width: 0; max-width: var(--panel-w); gap: 12px; }
+    body.playing .p-row { padding: 6px 10px 6px 6px; gap: 8px; }
+    body.playing .p-face { width: 44px; height: 44px; flex-basis: 44px; font-size: 25px; }
+    body.playing .p-name { font-size: 15px; }
+    body.playing .p-pips i { width: 9px; height: 9px; }
+    body.playing .shell-tray { height: clamp(150px, 22dvh, 208px); border-radius: 20px; }
+    body.playing .shells { top: 14px; gap: 5px; }
+    body.playing .shell { max-width: 56px; }
+    body.playing .throw-num { width: 78px; height: 78px; top: 64%; }
+    body.playing .throw-num .n { font-size: 37px; }
+    body.playing .throw-num .w { font-size: 11px; }
+    body.playing .tray-hint { font-size: 14px; bottom: 7px; }
+
+    @media (max-aspect-ratio: 4 / 5) {
+      body.playing .play-area {
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) auto;
+        align-content: center;
+        gap: 8px;
+      }
+      body.playing .board-wrap { width: min(calc(100vw - 10px), calc(100dvh - 182px)); }
+      body.playing .side-panel {
+        max-width: min(100%, 460px);
+        height: 156px;
+        flex-direction: row;
+        align-items: center;
+        gap: 10px;
+      }
+      body.playing .player-strip { flex: 1 1 auto; min-width: 0; gap: 5px; }
+      body.playing .p-turn { display: none !important; }
+      body.playing .shell-tray { flex: 0 0 178px; width: 178px; height: 150px; }
+      body.playing .shell { max-width: 40px; }
+      body.playing .throw-num { width: 62px; height: 62px; top: 63%; }
+      body.playing .throw-num .n { font-size: 29px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- The four hand-drawn Chowka Bara friends. Used whole as pawns, not as a face in a token. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="ch-ellie" viewBox="-24 -30 48 54">
+    <ellipse cx="0" cy="21" rx="15" ry="4" fill="#3B1F47" opacity=".16"/>
+    <ellipse cx="-13" cy="-5" rx="8" ry="10" fill="#9333EA"/>
+    <ellipse cx="13"  cy="-5" rx="8" ry="10" fill="#9333EA"/>
+    <ellipse cx="-13" cy="-5" rx="4.6" ry="6" fill="#C084FC" opacity=".65"/>
+    <ellipse cx="13"  cy="-5" rx="4.6" ry="6" fill="#C084FC" opacity=".65"/>
+    <path d="M-13,17 Q-13,-16 0,-16 Q13,-16 13,17 Q0,23 -13,17 Z" fill="#A855F7"/>
+    <path d="M-13,17 Q-6,20 0,20 L0,-16 Q-13,-16 -13,17 Z" fill="#B67CF9" opacity=".55"/>
+    <path d="M0,3 Q-2,12 3,15 Q7,17 6,20" stroke="#8B2FE0" stroke-width="4.6" fill="none" stroke-linecap="round"/>
+    <circle cx="-5" cy="-4" r="3.1" fill="#2A1233"/><circle cx="-4" cy="-5" r="1.1" fill="#fff"/>
+    <circle cx="5"  cy="-4" r="3.1" fill="#2A1233"/><circle cx="6"  cy="-5" r="1.1" fill="#fff"/>
+    <ellipse cx="-9.5" cy="2" rx="3.2" ry="2.1" fill="#F43F8A" opacity=".42"/>
+    <ellipse cx="9.5"  cy="2" rx="3.2" ry="2.1" fill="#F43F8A" opacity=".42"/>
+  </symbol>
+  <symbol id="ch-tara" viewBox="-24 -30 48 54">
+    <ellipse cx="0" cy="21" rx="15" ry="4" fill="#3B1F47" opacity=".16"/>
+    <circle cx="-9.5" cy="-14" r="5.6" fill="#F97316"/><circle cx="-9.5" cy="-14" r="2.8" fill="#FFD8B0"/>
+    <circle cx="9.5"  cy="-14" r="5.6" fill="#F97316"/><circle cx="9.5"  cy="-14" r="2.8" fill="#FFD8B0"/>
+    <path d="M-13,17 Q-13,-16 0,-16 Q13,-16 13,17 Q0,23 -13,17 Z" fill="#FB923C"/>
+    <path d="M-13,17 Q-6,20 0,20 L0,-16 Q-13,-16 -13,17 Z" fill="#FDA85E" opacity=".5"/>
+    <path d="M-4,-15 v5 M0,-16 v5.5 M4,-15 v5" stroke="#C2410C" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M-11,-6 q3.5,2 4.5,0" stroke="#C2410C" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M-11.5,1 q3.5,2 4.5,0" stroke="#C2410C" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M11,-6 q-3.5,2 -4.5,0" stroke="#C2410C" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M11.5,1 q-3.5,2 -4.5,0" stroke="#C2410C" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="0" cy="4.5" rx="7.5" ry="5.5" fill="#FFF2E2"/>
+    <path d="M-2.6,2.6 L2.6,2.6 L0,5.2 Z" fill="#E0568A"/>
+    <path d="M0,5.2 v2.2 M0,7.4 q-2.4,1.8 -4,0 M0,7.4 q2.4,1.8 4,0" stroke="#C2410C" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <circle cx="-5.4" cy="-4.5" r="3.1" fill="#2A1233"/><circle cx="-4.4" cy="-5.5" r="1.1" fill="#fff"/>
+    <circle cx="5.4"  cy="-4.5" r="3.1" fill="#2A1233"/><circle cx="6.4"  cy="-5.5" r="1.1" fill="#fff"/>
+  </symbol>
+  <symbol id="ch-mayu" viewBox="-24 -30 48 54">
+    <ellipse cx="0" cy="21" rx="15" ry="4" fill="#3B1F47" opacity=".16"/>
+    <path d="M-6,-15 L-8,-24 M0,-16 L0,-26 M6,-15 L8,-24" stroke="#0EA5E9" stroke-width="1.8" stroke-linecap="round"/>
+    <circle cx="-8" cy="-25" r="2.6" fill="#34D399"/>
+    <circle cx="0"  cy="-27" r="2.6" fill="#FDE047"/>
+    <circle cx="8"  cy="-25" r="2.6" fill="#34D399"/>
+    <path d="M-19,14 Q-24,2 -17,-6 Q-13,10 -13,16 Z" fill="#0EA5E9" opacity=".75"/>
+    <path d="M19,14 Q24,2 17,-6 Q13,10 13,16 Z" fill="#0EA5E9" opacity=".75"/>
+    <path d="M-13,17 Q-13,-16 0,-16 Q13,-16 13,17 Q0,23 -13,17 Z" fill="#38BDF8"/>
+    <path d="M-13,17 Q-6,20 0,20 L0,-16 Q-13,-16 -13,17 Z" fill="#66CDFB" opacity=".5"/>
+    <ellipse cx="0" cy="11" rx="6" ry="4.5" fill="#0E7490" opacity=".18"/>
+    <circle cx="0" cy="11" r="2.4" fill="#34D399" opacity=".7"/>
+    <path d="M-3.4,1 L3.4,1 L0,5.4 Z" fill="#FDE047"/>
+    <circle cx="-5.2" cy="-4.5" r="3.1" fill="#2A1233"/><circle cx="-4.2" cy="-5.5" r="1.1" fill="#fff"/>
+    <circle cx="5.2"  cy="-4.5" r="3.1" fill="#2A1233"/><circle cx="6.2"  cy="-5.5" r="1.1" fill="#fff"/>
+    <ellipse cx="-9.5" cy="2" rx="3" ry="2" fill="#F43F8A" opacity=".35"/>
+    <ellipse cx="9.5"  cy="2" rx="3" ry="2" fill="#F43F8A" opacity=".35"/>
+  </symbol>
+  <symbol id="ch-pip" viewBox="-24 -30 48 54">
+    <ellipse cx="0" cy="21" rx="15" ry="4" fill="#3B1F47" opacity=".16"/>
+    <circle cx="-7.5" cy="-17" r="6.4" fill="#6EE7B7"/>
+    <circle cx="7.5"  cy="-17" r="6.4" fill="#6EE7B7"/>
+    <circle cx="-7.5" cy="-17.5" r="4.4" fill="#fff"/>
+    <circle cx="7.5"  cy="-17.5" r="4.4" fill="#fff"/>
+    <circle cx="-6.6" cy="-17" r="2.5" fill="#1F3D30"/><circle cx="-5.7" cy="-18.2" r=".95" fill="#fff"/>
+    <circle cx="8.4"  cy="-17" r="2.5" fill="#1F3D30"/><circle cx="9.3"  cy="-18.2" r=".95" fill="#fff"/>
+    <path d="M-13,17 Q-13,-13 0,-13 Q13,-13 13,17 Q0,23 -13,17 Z" fill="#6EE7B7"/>
+    <path d="M-13,17 Q-6,20 0,20 L0,-13 Q-13,-13 -13,17 Z" fill="#8DF0C9" opacity=".55"/>
+    <path d="M-7,-1 Q0,6 7,-1" stroke="#1F7A5A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-9.5" cy="-2.5" rx="3" ry="2" fill="#F43F8A" opacity=".35"/>
+    <ellipse cx="9.5"  cy="-2.5" rx="3" ry="2" fill="#F43F8A" opacity=".35"/>
+    <ellipse cx="0" cy="9" rx="7" ry="5" fill="#B9F5DC" opacity=".7"/>
+  </symbol>
+</defs></svg>
+  <div class="garden" id="garden" aria-hidden="true"></div>
+
+  <main class="page">
+    <div class="topbar">
+      <a class="back" id="topHome" href="/" aria-label="Restart Chowka Bara">↺ Restart</a>
+      <button class="back close-x" id="closeBtn" aria-label="Close game and go to settings">✕ Close</button>
+      <div class="title">Chowka Bara</div>
+      <button class="sound-btn" id="soundBtn" aria-label="Toggle music">🔊</button>
+    </div>
+
+    <div class="controls" id="controls">
+      <div class="control-row">
+        <span class="control-label">Mode</span>
+        <div class="seg" id="modeSeg" role="radiogroup" aria-label="Mode">
+          <button class="seg-btn" data-value="1p" role="radio">🤖 vs Computer</button>
+          <button class="seg-btn" data-value="2p" role="radio">👯 Pass &amp; Play</button>
+        </div>
+      </div>
+      <div class="control-row hidden" id="countRow">
+        <span class="control-label">Players</span>
+        <div class="seg" id="countSeg" role="radiogroup" aria-label="Number of players">
+          <button class="seg-btn" data-value="2" role="radio">2</button>
+          <button class="seg-btn" data-value="3" role="radio">3</button>
+          <button class="seg-btn" data-value="4" role="radio">4</button>
+        </div>
+      </div>
+      <div class="control-row" id="iconRow">
+        <span class="control-label">Icons</span>
+        <div class="icon-chips" id="iconChips"></div>
+      </div>
+    </div>
+
+    <template id="gameInfo" data-title="Chowka Bara — how to play">
+      <p>An old South Indian race game played on a 5×5 cloth with cowrie shells.</p>
+      <ul>
+        <li>Throw the 4 shells. <b>Open mouths</b> count — 1, 2 or 3 steps.</li>
+        <li>All four mouths is <b>CHOWKA (4)</b>, all four humps is <b>BAARA (8)</b> — both let you throw again!</li>
+        <li>Tap a bouncing friend to move them, or use <b>← →</b> and <b>Enter</b>.</li>
+        <li>Land on someone and they go <b>BOOP</b> back home.</li>
+        <li>The four <b>star squares</b> are safe — nobody can be booped there.</li>
+        <li>Get all <b>4</b> friends to the lotus in the middle to win. 🪷</li>
+      </ul>
+    </template>
+
+    <div class="play-area">
+      <div class="board-wrap">
+        <div class="board-inner" id="boardInner">
+          <svg class="board-svg" id="boardSvg" viewBox="0 0 100 100" aria-hidden="true"></svg>
+        </div>
+      </div>
+
+      <aside class="side-panel">
+        <div class="player-strip" id="playerStrip"></div>
+
+        <div class="shell-tray disabled" id="shellTray" role="button" tabindex="0" aria-label="Throw the shells">
+          <div class="shells" id="shells"></div>
+          <div class="throw-num" id="throwNum"><span class="n">3</span><span class="w">MOVE</span></div>
+          <div class="tray-hint" id="trayHint"></div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="actions" id="gameActions">
+      <button class="btn btn-secondary" id="restartBtn">↺ New Game</button>
+    </div>
+  </main>
+
+  <div class="modal-backdrop hidden" id="resultBackdrop">
+    <section class="panel modal-panel" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+      <div class="result-avatars" id="resultAvatars"></div>
+      <h2 id="resultTitle">You won!</h2>
+      <p class="subtle" id="resultSub"></p>
+      <div class="actions">
+        <button class="btn btn-primary" id="playAgainBtn">Play Again ✨</button>
+        <button class="btn btn-secondary" id="homeBtn">Game Setup</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="confirmBackdrop">
+    <section class="panel modal-panel" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <span class="result-emoji">❓</span>
+      <h2 id="confirmTitle">End this game?</h2>
+      <p class="subtle">Your current game will be lost.</p>
+      <div class="actions">
+        <button class="btn btn-primary" id="confirmYesBtn">Yes</button>
+        <button class="btn btn-secondary" id="confirmNoBtn">Keep playing</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="modal-backdrop hidden" id="pickerBackdrop">
+    <section class="panel modal-panel picker-panel" role="dialog" aria-modal="true" aria-labelledby="pickerTitle">
+      <h2 id="pickerTitle">Pick your icon</h2>
+      <div class="avatar-grid" id="avatarGrid"></div>
+      <div class="actions">
+        <button class="btn btn-secondary" id="pickerCloseBtn">Close</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="js/shared.js"></script>
+  <script>
+  /* ============================================================
+     Chowka Bara (Ashta Chamma) — pass & play + vs computer
+     5x5 board, 4 pawns each, cowrie shells.
+     ============================================================ */
+
+  const $ = (s) => document.querySelector(s);
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  /* ---------- Geometry: 5x5 grid inside an ornamental border, viewBox 0..100 ---------- */
+  const PAD = 7.2;                 // width of the painted border band
+  const CELL = (100 - PAD * 2) / 5;
+  const cc = ([c, r]) => ({ x: PAD + c * CELL + CELL / 2, y: PAD + r * CELL + CELL / 2 });
+  const key = ([c, r]) => c + ',' + r;
+
+  // Outer lap, anticlockwise, starting bottom-centre.
+  const OUTER = [[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[4,0],[3,0],[2,0],[1,0],[0,0],[0,1],[0,2],[0,3],[0,4],[1,4]];
+  // The route spirals inward, so the inner lap runs the opposite way round.
+  const INNER = [[3,1],[3,2],[3,3],[2,3],[1,3],[1,2],[1,1],[2,1]];
+  const CENTRE = [2,2];
+  // Home square for player 1..4 as an index into OUTER (opposite corners first).
+  const HOME_IDX = [0, 8, 4, 12];
+  const LAST = 24; // path index of the lotus
+
+  // Only the four crossed houses on the outer ring are safe — the inner ring has none.
+  const SAFE = new Set([
+    ...OUTER.filter((_, i) => i % 4 === 0).map(key),
+    key(CENTRE),
+  ]);
+
+  // One step toward the middle from any square on the outer ring.
+  const inward = ([c, r]) => [Math.min(3, Math.max(1, c)), Math.min(3, Math.max(1, r))];
+
+  // A player's 25-step route: 16 outer, turn in for 8 inner, then the lotus.
+  function pathFor(h) {
+    const p = [];
+    for (let i = 0; i < 16; i++) p.push(OUTER[(h + i) % 16]);
+    const s = INNER.findIndex(cell => key(cell) === key(inward(p[15])));
+    for (let i = 0; i < 8; i++) p.push(INNER[(s + i) % 8]);
+    p.push(CENTRE);
+    return p;
+  }
+
+  /* ---------- Board rendering ---------- */
+  const boardSvg = $('#boardSvg');
+  const boardInner = $('#boardInner');
+
+  function buildBoard() {
+    const parts = [];
+
+    parts.push(`
+      <defs>
+        <linearGradient id="tileG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFF8E7"/><stop offset="100%" stop-color="#FBEBC8"/>
+        </linearGradient>
+        <linearGradient id="safeG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#E6F6F2"/><stop offset="100%" stop-color="#C4E9E1"/>
+        </linearGradient>
+        <linearGradient id="bandG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#C2185B"/><stop offset="34%" stop-color="#7B1FA2"/>
+          <stop offset="67%" stop-color="#00695C"/><stop offset="100%" stop-color="#C2185B"/>
+        </linearGradient>
+        <radialGradient id="homeGlow"><stop offset="0%" stop-color="#FFD54F" stop-opacity=".62"/>
+          <stop offset="65%" stop-color="#F59E0B" stop-opacity=".18"/>
+          <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/></radialGradient>
+        <radialGradient id="lotusGlow"><stop offset="0%" stop-color="#FFE082" stop-opacity=".95"/>
+          <stop offset="55%" stop-color="#F59E0B" stop-opacity=".34"/>
+          <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/></radialGradient>
+        <radialGradient id="groundG" cx="50%" cy="50%">
+          <stop offset="0%" stop-color="#2B2170"/><stop offset="100%" stop-color="#171041"/>
+        </radialGradient>
+      </defs>`);
+
+    // ---- Indigo ground with a faint gold mandala watermark ----
+    parts.push(`<rect x="0" y="0" width="100" height="100" fill="url(#groundG)"/>`);
+    parts.push(`<g fill="none" stroke="#E8B84B" stroke-opacity=".13">
+      ${[46, 39, 32, 25].map(r => `<circle cx="50" cy="50" r="${r}" stroke-width="0.35"/>`).join('')}
+      ${Array.from({ length: 48 }, (_, i) => {
+        const a = (i / 48) * Math.PI * 2;
+        return `<circle cx="${(50 + Math.cos(a) * 43).toFixed(2)}" cy="${(50 + Math.sin(a) * 43).toFixed(2)}" r="0.55" fill="#E8B84B" stroke="none" opacity=".5"/>`;
+      }).join('')}
+      ${Array.from({ length: 24 }, (_, i) => {
+        const a = (i / 24) * Math.PI * 2;
+        return `<line x1="${(50 + Math.cos(a) * 25).toFixed(2)}" y1="${(50 + Math.sin(a) * 25).toFixed(2)}"
+                      x2="${(50 + Math.cos(a) * 32).toFixed(2)}" y2="${(50 + Math.sin(a) * 32).toFixed(2)}" stroke-width="0.3"/>`;
+      }).join('')}
+    </g>`);
+
+    // ---- Ornamental border band: scalloped lotus petals + gold beading ----
+    parts.push(`<rect x="1.5" y="1.5" width="97" height="97" rx="6" fill="none"
+      stroke="url(#bandG)" stroke-width="3"/>`);
+    parts.push(`<rect x="3.4" y="3.4" width="93.2" height="93.2" rx="4.6" fill="none"
+      stroke="#E8B84B" stroke-width="0.7" stroke-opacity=".85"/>`);
+    parts.push(`<rect x="5.4" y="5.4" width="89.2" height="89.2" rx="3.4" fill="none"
+      stroke="#E8B84B" stroke-width="0.45" stroke-opacity=".5"/>`);
+
+    // petal scallops hanging off the inner edge of the band
+    const scallops = [];
+    for (let i = 0; i < 18; i++) {
+      const t = 5.6 + (88.8 * (i + 0.5)) / 18;
+      ['t', 'b', 'l', 'r'].forEach(side => {
+        const c = side === 't' ? [t, 6.4] : side === 'b' ? [t, 93.6] : side === 'l' ? [6.4, t] : [93.6, t];
+        const rot = side === 't' ? 90 : side === 'b' ? 270 : side === 'l' ? 0 : 180;
+        scallops.push(`<g transform="translate(${c[0]},${c[1]}) rotate(${rot})">
+          <path d="M0,-1.5 Q2.3,0 0,1.5 Q-0.7,0 0,-1.5 Z" fill="#E8B84B" opacity=".55"/>
+        </g>`);
+      });
+    }
+    parts.push(`<g>${scallops.join('')}</g>`);
+
+    // corner rosettes
+    [[5.9, 5.9], [94.1, 5.9], [5.9, 94.1], [94.1, 94.1]].forEach(([x, y]) => {
+      parts.push(`<g transform="translate(${x},${y})">
+        <circle r="3.5" fill="#C2185B"/>
+        ${Array.from({ length: 8 }, (_, i) =>
+          `<ellipse cx="0" cy="-2.5" rx="0.85" ry="1.7" fill="#FFD54F" transform="rotate(${i * 45})"/>`).join('')}
+        <circle r="1.15" fill="#00897B" stroke="#E8B84B" stroke-width="0.3"/>
+      </g>`);
+    });
+
+    // ---- Painted gold route ribbon: "this is a circuit", no arrowheads ----
+    const oR = PAD + CELL / 2, oF = 100 - oR;         // outer lap centre-line
+    const iR = PAD + CELL * 1.5, iF = 100 - iR;       // inner lap centre-line
+    parts.push(`<g fill="none" stroke="#E8B84B" stroke-opacity=".2" stroke-width="11.5" stroke-linejoin="round">
+      <path d="M${oR + 6},${oR} H${oF - 6} Q${oF},${oR} ${oF},${oR + 6} V${oF - 6} Q${oF},${oF} ${oF - 6},${oF}
+               H${oR + 6} Q${oR},${oF} ${oR},${oF - 6} V${oR + 6} Q${oR},${oR} ${oR + 6},${oR} Z"/>
+      <path d="M${iR + 4},${iR} H${iF - 4} Q${iF},${iR} ${iF},${iR + 4} V${iF - 4} Q${iF},${iF} ${iF - 4},${iF}
+               H${iR + 4} Q${iR},${iF} ${iR},${iF - 4} V${iR + 4} Q${iR},${iR} ${iR + 4},${iR} Z"/>
+    </g>`);
+
+    // ---- Tiles ----
+    for (let r = 0; r < 5; r++) {
+      for (let c = 0; c < 5; c++) {
+        if (c === 2 && r === 2) continue;
+        const safe = SAFE.has(key([c, r]));
+        const x = PAD + c * CELL + 1.05, y = PAD + r * CELL + 1.05, w = CELL - 2.1;
+        parts.push(`<rect x="${x}" y="${y}" width="${w}" height="${w}" rx="3"
+          fill="${safe ? 'url(#safeG)' : 'url(#tileG)'}" stroke="#E8B84B" stroke-width="0.75"/>`);
+        parts.push(`<rect x="${x + 1}" y="${y + 1}" width="${w - 2}" height="${w - 2}" rx="2.2"
+          fill="none" stroke="${safe ? '#00897B' : '#D98324'}" stroke-width="0.32" stroke-opacity=".55"/>`);
+        if (!safe) {
+          // A whisper of block-print so plain tiles aren't dead space.
+          const m = x + w / 2, n = y + w / 2;
+          parts.push(`<g fill="#D98324" opacity=".16">
+            <circle cx="${m}" cy="${n}" r="0.62"/>
+            ${[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([a, b]) =>
+              `<path d="M${m + a * 4.6},${n + b * 4.6} q${a * 1.5},${-b * 0.4} ${a * 1.7},${b * 1.7} q${-a * 0.4},${-b * 1.5} ${-a * 1.7},${-b * 1.7} Z"/>`).join('')}
+          </g>`);
+        }
+      }
+    }
+
+    // ---- Kolam stars on the crossed houses that are not somebody's home ----
+    const kolam = (x, y, col) => `<g transform="translate(${x},${y})" opacity=".42">
+      ${Array.from({ length: 8 }, (_, i) =>
+        `<ellipse cx="0" cy="-5.4" rx="0.62" ry="1.6" fill="${col}" transform="rotate(${i * 45})"/>`).join('')}
+      ${Array.from({ length: 8 }, (_, i) =>
+        `<circle cx="0" cy="-3.1" r="0.42" fill="${col}" transform="rotate(${i * 45 + 22.5})"/>`).join('')}
+      <circle r="1.5" fill="none" stroke="${col}" stroke-width="0.34"/>
+      <circle r="0.5" fill="${col}"/>
+    </g>`;
+    [[0, 2], [4, 2], [2, 0], [2, 4]].forEach(cell => {
+      if (state.players.some(p => key(OUTER[p.home]) === key(cell))) return;
+      const { x, y } = cc(cell);
+      parts.push(kolam(x, y, '#00695C'));
+    });
+
+    // ---- Cozy homes ----
+    state.players.forEach(p => {
+      const { x, y } = cc(OUTER[p.home]);
+      parts.push(homeMarkup(x, y, p.color));
+    });
+
+    // ---- Lotus mandala centre ----
+    const L = cc(CENTRE), S = CELL / 20;
+    parts.push(`<g>
+      <circle cx="${L.x}" cy="${L.y}" r="${13 * S}" fill="url(#lotusGlow)" class="lotus-glow"/>
+      <rect x="${L.x - 8.8 * S}" y="${L.y - 8.8 * S}" width="${17.6 * S}" height="${17.6 * S}" rx="${3.4 * S}"
+            fill="#1B1147" stroke="#E8B84B" stroke-width="0.8"/>
+      <g transform="translate(${L.x},${L.y}) scale(${S})">
+        ${Array.from({ length: 16 }, (_, i) =>
+          `<ellipse cx="0" cy="-6.6" rx="1.15" ry="2.5" fill="#C2185B" opacity=".9" transform="rotate(${i * 22.5})"/>`).join('')}
+        ${Array.from({ length: 12 }, (_, i) =>
+          `<ellipse cx="0" cy="-4.6" rx="1.35" ry="2.3" fill="#F5A623" opacity=".95" transform="rotate(${i * 30 + 15})"/>`).join('')}
+        ${Array.from({ length: 8 }, (_, i) =>
+          `<ellipse cx="0" cy="-2.9" rx="1.2" ry="1.8" fill="#00897B" transform="rotate(${i * 45})"/>`).join('')}
+        <circle r="2.5" fill="#FFD54F" stroke="#E8B84B" stroke-width="0.5"/>
+        <path d="M0,-1.6 l0.45,0.98 1.11,0.11 -0.84,0.74 0.26,1.08 -0.98,-0.57 -0.98,0.57 0.26,-1.08 -0.84,-0.74 1.11,-0.11 Z" fill="#C2185B"/>
+      </g>
+    </g>`);
+
+    // Personal turn markers for the current player, drawn last so they sit on top.
+    parts.push(`<g id="turnMarks"></g>`);
+
+    boardSvg.innerHTML = parts.join('');
+  }
+
+  function homeMarkup(x, y, color) {
+    const S = (CELL / 20) * 0.2262;
+    return `<g transform="translate(${x},${y}) scale(${S})">
+      <rect x="-42" y="-42" width="84" height="84" rx="13" fill="#FFE7B8"/>
+      <rect x="-42" y="-42" width="84" height="84" rx="13" fill="${color}" opacity=".16"/>
+      <path d="M-33,42 V-4 A33,33 0 0 1 33,-4 V42 Z" fill="${color}" opacity=".3"/>
+      <path d="M-33,42 V-4 A33,33 0 0 1 33,-4 V42 Z" fill="none" stroke="#E8B84B" stroke-width="3.4"/>
+      <path d="M-26,42 V-4 A26,26 0 0 1 26,-4 V42" fill="none" stroke="#FFF3D6" stroke-width="2" opacity=".8"/>
+      ${Array.from({ length: 9 }, (_, i) => {
+        const a = Math.PI + (i / 8) * Math.PI;
+        return `<circle cx="${(Math.cos(a) * 33).toFixed(1)}" cy="${(-4 + Math.sin(a) * 33).toFixed(1)}" r="2.4" fill="#E8B84B"/>`;
+      }).join('')}
+      <ellipse cx="0" cy="6" rx="30" ry="26" fill="url(#homeGlow)"/>
+      <path d="M0,-34 c-4,-5.2 -11.6,-1.9 -11.6,4 c0,5.1 7.2,9.3 11.6,13.5 c4.4,-4.2 11.6,-8.4 11.6,-13.5 c0,-5.9 -7.6,-9.2 -11.6,-4 Z"
+            fill="#C2185B" stroke="#E8B84B" stroke-width="1.4"/>
+      <path d="M-25,-24 v5" stroke="#E8B84B" stroke-width="1.8"/>
+      <circle cx="-25" cy="-11" r="10" fill="#FFD54F" opacity=".4"/>
+      <path d="M-30,-15 h10 l-2,9 h-6 Z" fill="#F5A623" stroke="#E8B84B" stroke-width="1.2"/>
+      <path d="M-25,-19 c-2.6,2.4 -3.4,4.4 0,7 c3.4,-2.6 2.6,-4.6 0,-7 Z" fill="#FFF3D6"/>
+      <path d="M25,-24 v5" stroke="#E8B84B" stroke-width="1.8"/>
+      <path d="M20,-15 h10 l-2,9 h-6 Z" fill="#F5A623" stroke="#E8B84B" stroke-width="1.2"/>
+      <path d="M25,-19 c-2.6,2.4 -3.4,4.4 0,7 c3.4,-2.6 2.6,-4.6 0,-7 Z" fill="#FFF3D6"/>
+      <ellipse cx="0" cy="32" rx="30" ry="7" fill="#C2185B" opacity=".3"/>
+      <ellipse cx="0" cy="32" rx="20" ry="4.5" fill="#F5A623" opacity=".45"/>
+    </g>`;
+  }
+
+  // The only two surprising bits of the route: where you dive inward, and
+  // where you step into the lotus. Both are personal, so they get a real badge.
+  function drawTurnMarks() {
+    const g = boardSvg.querySelector('#turnMarks');
+    if (!g) return;
+    const p = state.players[state.current];
+    if (!p || !state.started || state.over) { g.innerHTML = ''; return; }
+    const path = p.path;
+    const marks = [[15, 16], [23, 24]];
+    g.innerHTML = marks.map(([a, b]) => {
+      const A = cc(path[a]), B = cc(path[b]);
+      const dx = B.x - A.x, dy = B.y - A.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len, uy = dy / len;
+      const px = A.x + ux * 7.2, py = A.y + uy * 7.2;
+      const rot = Math.atan2(uy, ux) * 180 / Math.PI;
+      return `<g transform="translate(${px},${py}) rotate(${rot})" opacity=".95">
+        <circle r="3" fill="${p.color}" stroke="#FFF3D6" stroke-width="0.7"/>
+        <path d="M-1,-1.2 L1.1,0 L-1,1.2" fill="none" stroke="#FFF3D6" stroke-width="0.95"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </g>`;
+    }).join('');
+  }
+
+  /* ============================================================
+     Audio — Indian folk (garba-flavoured) music + sfx via Web Audio.
+     Raag Khamaj melody over a Kaherwa dhol groove, with a tanpura drone.
+     ============================================================ */
+  const SW = { SA: 523.25, RE: 587.33, GA: 659.25, MA: 698.46, PA: 783.99, DHA: 880.0, NI: 932.33, SA2: 1046.5,
+               pa_: 392.0, dha_: 440.0, ni_: 466.16 };
+
+  const VOL = 0.5;   // overall output level
+
+  const Sound = {
+    ctx: null, master: null, musicGain: null, muted: false, timer: null, step: 0, noiseBuf: null,
+
+    // 32 steps ≈ 4 cycles of Kaherwa. 0 = hold the previous note.
+    melody: [
+      SW.PA, 0, SW.DHA, SW.PA,  SW.MA, SW.GA, SW.MA, SW.PA,
+      SW.GA, 0, SW.RE, SW.GA,   SW.SA, 0, SW.ni_, 0,
+      SW.PA, SW.DHA, SW.SA2, SW.DHA,  SW.PA, SW.MA, SW.GA, SW.MA,
+      SW.GA, SW.RE, SW.SA, SW.RE,  SW.SA, 0, 0, 0,
+    ],
+    // A meend (slide) into the note wherever this is set.
+    glide: [0,0,1,0, 0,0,0,1, 0,0,0,1, 0,0,0,0,
+            0,0,1,0, 0,0,0,1, 0,0,0,0, 0,0,0,0],
+
+    init() {
+      if (this.ctx) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = this.muted ? 0 : VOL * this.level;
+      this.master.connect(this.ctx.destination);
+      this.musicGain = this.ctx.createGain();
+      this.musicGain.gain.value = 0.5;
+      this.musicGain.connect(this.master);
+
+      const n = this.ctx.sampleRate * 0.5;
+      this.noiseBuf = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
+      const d = this.noiseBuf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    },
+    resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+
+    tone(freq, dur, type = 'sine', vol = 0.2, glideTo = null, dest = null) {
+      if (!this.ctx || !freq) return;
+      const t = this.ctx.currentTime;
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = type;
+      o.frequency.setValueAtTime(freq, t);
+      if (glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(dest || this.master);
+      o.start(t); o.stop(t + dur + 0.05);
+    },
+
+    // Bansuri-ish lead: triangle + gentle vibrato, optional meend into the note.
+    reed(freq, dur, vol, from) {
+      if (!this.ctx || !freq) return;
+      const t = this.ctx.currentTime;
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      const lfo = this.ctx.createOscillator();
+      const lfoG = this.ctx.createGain();
+      o.type = 'triangle';
+      if (from) {
+        o.frequency.setValueAtTime(from, t);
+        o.frequency.exponentialRampToValueAtTime(freq, t + Math.min(0.13, dur * 0.5));
+      } else {
+        o.frequency.setValueAtTime(freq, t);
+      }
+      lfo.frequency.value = 5.6;
+      lfoG.gain.value = freq * 0.008;
+      lfo.connect(lfoG); lfoG.connect(o.frequency);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.05);
+      g.gain.setValueAtTime(vol, t + dur * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(this.musicGain || this.master);
+      o.start(t); lfo.start(t);
+      o.stop(t + dur + 0.05); lfo.stop(t + dur + 0.05);
+    },
+
+    // Dhol membrane: pitched thump that drops fast.
+    thump(f0, f1, dur, vol, dest) {
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      const o = this.ctx.createOscillator();
+      const g = this.ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(f0, t);
+      o.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.75);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(dest || this.master);
+      o.start(t); o.stop(t + dur + 0.02);
+    },
+
+    // Filtered noise burst: dhol slap, manjira, ghungroo.
+    hit(freq, q, dur, vol, dest) {
+      if (!this.ctx || !this.noiseBuf) return;
+      const t = this.ctx.currentTime;
+      const s = this.ctx.createBufferSource();
+      s.buffer = this.noiseBuf;
+      const bp = this.ctx.createBiquadFilter();
+      bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      s.connect(bp); bp.connect(g); g.connect(dest || this.master);
+      s.start(t); s.stop(t + dur + 0.02);
+    },
+
+    // Tanpura: Sa and Pa plucked softly underneath.
+    drone(dest) {
+      this.tone(130.81, 2.6, 'sawtooth', 0.018, null, dest);
+      this.tone(196.00, 2.6, 'sawtooth', 0.014, null, dest);
+      this.tone(261.63, 2.2, 'sine', 0.012, null, dest);
+    },
+
+    startMusic() {
+      if (this.timer) return;
+      this.step = 0;
+      const G = () => this.musicGain || this.master;
+      this.timer = setInterval(() => {
+        const s = this.step % 32;
+        const beat = s % 8;
+
+        if (s === 0 || s === 16) this.drone(G());
+
+        // Kaherwa: dha ge na ti | na ka dhi na
+        if (beat === 0) { this.thump(112, 52, 0.3, 0.16, G()); this.hit(2400, 3, 0.035, 0.05, G()); }
+        if (beat === 1) this.thump(96, 48, 0.2, 0.07, G());
+        if (beat === 2) this.hit(2000, 5, 0.05, 0.075, G());
+        if (beat === 3) this.hit(2600, 6, 0.03, 0.04, G());
+        if (beat === 4) this.hit(2000, 5, 0.05, 0.07, G());
+        if (beat === 5) this.thump(96, 46, 0.18, 0.06, G());
+        if (beat === 6) { this.thump(108, 50, 0.26, 0.13, G()); this.hit(2200, 5, 0.04, 0.05, G()); }
+        if (beat === 7) this.hit(2400, 6, 0.04, 0.055, G());
+
+        // Manjira shimmer on the off-beats
+        if (beat === 2 || beat === 6) this.hit(6200, 2, 0.09, 0.028, G());
+
+        const m = this.melody[s];
+        if (m) {
+          const prev = this.melody.slice(0, s).reverse().find(v => v) || 0;
+          this.reed(m, 0.34, 0.055, this.glide[s] && prev ? prev : null);
+        }
+        this.step++;
+      }, 215);
+    },
+
+    // Dry wooden clatter for the cowries.
+    sfxThrow() {
+      this.resume();
+      for (let i = 0; i < 7; i++) {
+        setTimeout(() => { this.hit(900 + Math.random() * 1400, 8, 0.05, 0.11); this.thump(260, 150, 0.05, 0.05); }, i * 55);
+      }
+    },
+    sfxHop()   { this.tone(560, 0.08, 'sine', 0.11, 840); this.hit(5200, 3, 0.05, 0.02); },
+    sfxLand()  { this.thump(180, 90, 0.12, 0.12); this.hit(3000, 4, 0.04, 0.04); },
+    sfxSafe()  { [SW.SA, SW.PA].forEach((f, i) => setTimeout(() => this.tone(f, 0.5, 'sine', 0.09), i * 70)); this.hit(6400, 2, 0.22, 0.035); },
+    sfxBoop()  {
+      this.thump(200, 70, 0.14, 0.16);
+      setTimeout(() => this.tone(SW.PA, 0.24, 'sine', 0.12, SW.SA2 * 1.5), 90);
+    },
+    // Manjira flourish — "throw again!"
+    sfxAgain() {
+      [0, 90, 180].forEach((d, i) => setTimeout(() => {
+        this.hit(6000 + i * 900, 2, 0.2, 0.06);
+        this.tone([SW.PA, SW.DHA, SW.SA2][i], 0.2, 'triangle', 0.13);
+      }, d));
+      setTimeout(() => this.thump(112, 52, 0.3, 0.14), 0);
+    },
+    // Temple bell + dhol when a pawn reaches the lotus.
+    sfxHome()  {
+      [SW.SA, SW.GA, SW.PA, SW.SA2].forEach((f, i) => setTimeout(() => this.tone(f, 0.42, 'triangle', 0.15), i * 115));
+      [0, 230, 460].forEach(d => setTimeout(() => this.thump(112, 52, 0.32, 0.14), d));
+      setTimeout(() => this.hit(5600, 1.5, 0.9, 0.05), 60);
+    },
+    sfxNope()  { this.tone(196, 0.22, 'sine', 0.09, 147); },
+    sfxWin()   {
+      [SW.SA, SW.GA, SW.PA, SW.DHA, SW.SA2].forEach((f, i) => setTimeout(() => this.reed(f, 0.5, 0.16), i * 125));
+      for (let i = 0; i < 10; i++) setTimeout(() => this.thump(112 - i, 52, 0.26, 0.13), i * 120);
+      [0, 300, 600, 900].forEach(d => setTimeout(() => this.hit(6200, 2, 0.28, 0.05), d));
+    },
+    toggleMute() {
+      this.muted = !this.muted;
+      if (this.master) this.master.gain.value = this.muted ? 0 : VOL * this.level;
+      return this.muted;
+    },
+    level: 1,
+    setVolume(v) {
+      this.level = v;
+      if (this.master) this.master.gain.value = this.muted ? 0 : VOL * v;
+    }
+  };
+
+  // One slider in the music panel controls music and sound effects together.
+  if (window.FunZoneMusic) FunZoneMusic.onVolume(v => Sound.setVolume(v));
+
+  /* ============================================================
+     Avatars
+     ============================================================ */
+  const AVATAR_SET = [
+    { id:'ellie', char:'ch-ellie', color:'#A855F7', label:'Ellie the Elephant' },
+    { id:'tara',  char:'ch-tara',  color:'#FB923C', label:'Tara the Tiger' },
+    { id:'mayu',  char:'ch-mayu',  color:'#38BDF8', label:'Mayu the Peacock' },
+    { id:'pip',   char:'ch-pip',   color:'#22C55E', label:'Pip the Frog' },
+    { id:'unicorn',  emoji:'🦄', color:'#F43F8A', label:'Unicorn' },
+    { id:'tiger',    emoji:'🐯', color:'#FB923C', label:'Tiger' },
+    { id:'frog',     emoji:'🐸', color:'#22C55E', label:'Frog' },
+    { id:'panda',    emoji:'🐼', color:'#64748B', label:'Panda' },
+    { id:'elephant', emoji:'🐘', color:'#A855F7', label:'Elephant' },
+    { id:'peacock',  emoji:'🦚', color:'#38BDF8', label:'Peacock' },
+    { id:'whitecat', img:'assets/avatars/white-cat.svg', color:'#94A3B8', label:'White Cat' },
+    { id:'blackcat', img:'assets/avatars/black-cat.svg', color:'#334155', label:'Black Cat' },
+    { id:'rumi',     img:'assets/avatars/rumi.svg', color:'#8B5CF6', label:'Rumi' },
+    { id:'mira',     img:'assets/avatars/mira.svg', color:'#EC4899', label:'Mira' },
+    { id:'jino',     img:'assets/avatars/jino.svg', color:'#38BDF8', label:'Jino' },
+  ];
+  const AVATAR_BY_ID = Object.fromEntries(AVATAR_SET.map(a => [a.id, a]));
+  const ROBOT = { emoji:'🤖', color:'#64748B', label:'Computer' };
+  const DEFAULT_AVATARS = ['ellie','tara','mayu','pip'];
+
+  function avatarMarkup(a) {
+    if (!a) return '';
+    if (a.char) return `<svg class="av-char" viewBox="-24 -30 48 54"><use href="#${a.char}" x="-24" y="-30" width="48" height="54"/></svg>`;
+    if (a.img) return `<img class="av-img" src="${a.img}" alt="${a.label || ''}" draggable="false">`;
+    return `<span class="av-emoji">${a.emoji}</span>`;
+  }
+  function loadAvatars() {
+    try {
+      const v = JSON.parse(localStorage.getItem('funzone.chowka.avatars'));
+      if (Array.isArray(v)) {
+        const out = DEFAULT_AVATARS.slice();
+        v.forEach((id, i) => { if (i < 4 && AVATAR_BY_ID[id]) out[i] = id; });
+        return out;
+      }
+    } catch (e) {}
+    return DEFAULT_AVATARS.slice();
+  }
+  function saveAvatars() {
+    try { localStorage.setItem('funzone.chowka.avatars', JSON.stringify(state.avatarIds)); } catch (e) {}
+  }
+
+  /* ============================================================
+     State
+     ============================================================ */
+  const state = {
+    mode: '1p',
+    playerCount: 2,
+    players: [],
+    avatarIds: loadAvatars(),
+    current: 0,
+    started: false,
+    busy: false,
+    over: false,
+    phase: 'idle',   // idle | rolling | choose | moving
+    roll: 0,
+    sel: 0,          // index into the movable list
+    movable: [],
+  };
+
+  const controls    = $('#controls');
+  const modeSeg     = $('#modeSeg');
+  const countRow    = $('#countRow');
+  const countSeg    = $('#countSeg');
+  const playerStrip = $('#playerStrip');
+  const shellTray   = $('#shellTray');
+  const shellsEl    = $('#shells');
+  const throwNum    = $('#throwNum');
+  const trayHint    = $('#trayHint');
+  const restartBtn  = $('#restartBtn');
+  const closeBtn    = $('#closeBtn');
+  const soundBtn    = $('#soundBtn');
+  const iconChips   = $('#iconChips');
+  const resultBackdrop = $('#resultBackdrop');
+  const resultAvatars  = $('#resultAvatars');
+  const resultTitle    = $('#resultTitle');
+  const resultSub      = $('#resultSub');
+  const playAgainBtn   = $('#playAgainBtn');
+  const homeBtn        = $('#homeBtn');
+  const confirmBackdrop = $('#confirmBackdrop');
+  const confirmYesBtn   = $('#confirmYesBtn');
+  const confirmNoBtn    = $('#confirmNoBtn');
+  const pickerBackdrop  = $('#pickerBackdrop');
+  const pickerTitle     = $('#pickerTitle');
+  const avatarGrid      = $('#avatarGrid');
+  const pickerCloseBtn  = $('#pickerCloseBtn');
+
+  /* ---------- Shells ---------- */
+  // Drawn from real cowries: a glossy cream dome stained warm toward the margins;
+  // on the other side a narrow dark aperture, its bright rolled lips combed with
+  // dark denticles that reach out from the slit.
+  const SHELL_BODY = 'M-18,0.6 C-18,-5.6 -12.4,-9.6 -3,-9.9 C7,-10.2 18,-6.4 18,-0.6 ' +
+                     'C18,5.2 8.4,9.6 -2.4,9.9 C-11.8,10.2 -18,6.8 -18,0.6 Z';
+
+  // Aperture centre-line, the half-width of the dark slit, and the reach of the teeth.
+  const APX = (u) => -15.2 + u * 30.4;
+  const APY = (u) => 2.5 - u * 3.8 + Math.sin(u * Math.PI) * 0.9;
+  const APH = (u) => 0.34 + Math.sin(u * Math.PI) * 0.72;
+  const TOOTH = (u) => 1.25 + Math.sin(u * Math.PI) * 1.75;
+
+  const SHELL_SVG = (i) => {
+    const N = 22, teeth = [], lipTop = [], lipBot = [], slitTop = [], slitBot = [];
+    for (let t = 0; t <= N; t++) {
+      const u = t / N, x = APX(u), y = APY(u), h = APH(u), r = TOOTH(u);
+      slitTop.push(`${x.toFixed(2)},${(y - h).toFixed(2)}`);
+      slitBot.push(`${x.toFixed(2)},${(y + h).toFixed(2)}`);
+      lipTop.push(`${x.toFixed(2)},${(y - h - r).toFixed(2)}`);
+      lipBot.push(`${x.toFixed(2)},${(y + h + r).toFixed(2)}`);
+    }
+    for (let t = 0; t < 10; t++) {                      // ~10 denticles a lip, as on a real cowrie
+      const u = (t + 0.5) / 10, x = APX(u), y = APY(u), h = APH(u), r = TOOTH(u);
+      const sk = (u - 0.5) * 2.2;                       // teeth fan toward the ends
+      teeth.push(`M${x.toFixed(2)},${(y - h - 0.05).toFixed(2)} L${(x + sk).toFixed(2)},${(y - h - r * 0.82).toFixed(2)}`);
+      teeth.push(`M${x.toFixed(2)},${(y + h + 0.05).toFixed(2)} L${(x + sk).toFixed(2)},${(y + h + r * 0.82).toFixed(2)}`);
+    }
+    const poly = (a, b) => `M${a.join(' L')} L${b.slice().reverse().join(' L')} Z`;
+    const slit = poly(slitTop, slitBot);
+    const lips = poly(lipTop, lipBot);
+
+    return `
+    <svg viewBox="-20 -15 40 30">
+      <defs>
+        <radialGradient id="dome${i}" cx="34%" cy="20%" r="88%">
+          <stop offset="0%"   stop-color="#FFFFFC"/>
+          <stop offset="26%"  stop-color="#FFFBEE"/>
+          <stop offset="56%"  stop-color="#F8EFD6"/>
+          <stop offset="80%"  stop-color="#EADBB2"/>
+          <stop offset="100%" stop-color="#D0BA8C"/>
+        </radialGradient>
+        <radialGradient id="face${i}" cx="36%" cy="22%" r="90%">
+          <stop offset="0%"   stop-color="#FFFFFD"/>
+          <stop offset="45%"  stop-color="#FDF8EC"/>
+          <stop offset="78%"  stop-color="#F5EBD6"/>
+          <stop offset="100%" stop-color="#DFCDA8"/>
+        </radialGradient>
+        <linearGradient id="gloss${i}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#FFFFFF" stop-opacity=".95"/>
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="slitg${i}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#20190F"/>
+          <stop offset="50%"  stop-color="#3B2E1D"/>
+          <stop offset="100%" stop-color="#20190F"/>
+        </linearGradient>
+      </defs>
+
+      <g class="f-hump">
+        <ellipse cx="0.5" cy="10.4" rx="14.5" ry="2.4" fill="#3B1F47" opacity=".22"/>
+        <path d="${SHELL_BODY}" fill="url(#dome${i})"/>
+        <ellipse cx="8.6" cy="1.6" rx="6.2" ry="4.6" fill="#E2CB99" opacity=".42"/>
+        <ellipse cx="-10.2" cy="2.2" rx="5.4" ry="3.6" fill="#E7D3A6" opacity=".36"/>
+        <ellipse cx="-1" cy="6.6" rx="10" ry="3" fill="#DDC593" opacity=".3"/>
+        <path d="M-13.6,-1.2 C-6,-3.4 6,-3.2 14.4,-0.4" fill="none" stroke="#C6A972"
+              stroke-width="0.7" opacity=".45" stroke-linecap="round"/>
+        <ellipse cx="-4.6" cy="-5.6" rx="7.8" ry="2.8" fill="url(#gloss${i})" opacity=".95"
+                 transform="rotate(-7 -4.6 -5.6)"/>
+        <ellipse cx="7.6" cy="-4.6" rx="2.6" ry="1.2" fill="#fff" opacity=".85"/>
+        <path d="${SHELL_BODY}" fill="none" stroke="#C2A876" stroke-width="1.2" opacity=".4"/>
+      </g>
+
+      <g class="f-mouth">
+        <ellipse cx="0.5" cy="10.4" rx="14.5" ry="2.4" fill="#3B1F47" opacity=".22"/>
+        <path d="${SHELL_BODY}" fill="url(#face${i})"/>
+        <ellipse cx="-1" cy="7" rx="11" ry="2.6" fill="#E8D9B8" opacity=".36"/>
+        <path d="${lips}" fill="#FFFDF6"/>
+        <path d="${lips}" fill="none" stroke="#E0CDA6" stroke-width="0.5" opacity=".65"/>
+        <g stroke="#57452E" stroke-width="0.7" stroke-linecap="round" opacity=".85">
+          <path d="${teeth.join(' ')}"/>
+        </g>
+        <path d="${slit}" fill="url(#slitg${i})"/>
+        <ellipse cx="-4.6" cy="-6.2" rx="7" ry="2.2" fill="url(#gloss${i})" opacity=".8"
+                 transform="rotate(-7 -4.6 -6.2)"/>
+        <path d="${SHELL_BODY}" fill="none" stroke="#CBB483" stroke-width="1.2" opacity=".4"/>
+      </g>
+    </svg>`;
+  };
+
+  let shellEls = [];
+  function buildShells() {
+    shellsEl.innerHTML = '';
+    shellEls = [0, 1, 2, 3].map((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'shell';
+      d.innerHTML = SHELL_SVG(i);
+      shellsEl.appendChild(d);
+      return d;
+    });
+  }
+  function showShells(faces) {
+    shellEls.forEach((el, i) => el.classList.toggle('mouth', !!faces[i]));
+  }
+
+  // 4 cowries: mouths count. 0 mouths = Baara (8), 4 mouths = Chowka (4).
+  function throwShells() {
+    const faces = [0, 1, 2, 3].map(() => Math.random() < 0.5 ? 1 : 0);
+    const mouths = faces.reduce((a, b) => a + b, 0);
+    const value = mouths === 0 ? 8 : mouths === 4 ? 4 : mouths;
+    const word = mouths === 0 ? 'BAARA' : mouths === 4 ? 'CHOWKA' : 'MOVE';
+    return { faces, value, word, again: mouths === 0 || mouths === 4 };
+  }
+
+  async function animateThrow() {
+    Sound.sfxThrow();
+    throwNum.classList.remove('show');
+    const cyc = setInterval(() => showShells([0,1,2,3].map(() => Math.random() < 0.5 ? 1 : 0)), 90);
+    shellEls.forEach((el, i) => {
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = `shellTumble 0.85s cubic-bezier(0.2,0.7,0.35,1) ${i * 0.06}s both`;
+    });
+    await sleep(1000);
+    clearInterval(cyc);
+    const res = throwShells();
+    showShells(res.faces);
+    await sleep(180);
+    throwNum.querySelector('.n').textContent = res.value;
+    throwNum.querySelector('.w').textContent = res.word;
+    throwNum.classList.add('show');
+    if (res.again) Sound.sfxAgain();
+    await sleep(res.again ? 620 : 380);
+    return res;
+  }
+
+  /* ---------- Pawn tokens ---------- */
+  let tokens = [];   // flat list of { el, pi, ki }
+
+  // The pawn from the mockup: a lacquered gumdrop body in the player's colour
+  // with a gold-rimmed face plate holding their avatar.
+  function pawnBody(color) {
+    return `<svg class="pawn-body" viewBox="0 0 48 58" aria-hidden="true">
+      <defs>
+        <linearGradient id="pg${color.replace('#','')}" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity=".55"/>
+          <stop offset="45%" stop-color="#ffffff" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <ellipse cx="24" cy="53.5" rx="15" ry="3.4" fill="#1B1147" opacity=".22"/>
+      <path d="M8,49 C8,23 13,10 24,10 C35,10 40,23 40,49 Q24,56 8,49 Z" fill="${color}"/>
+      <path d="M8,49 C8,23 13,10 24,10 C35,10 40,23 40,49 Q24,56 8,49 Z" fill="url(#pg${color.replace('#','')})"/>
+      <path d="M8,49 C8,23 13,10 24,10 C35,10 40,23 40,49 Q24,56 8,49 Z"
+            fill="none" stroke="#E8B84B" stroke-width="1.7"/>
+      <ellipse cx="24" cy="45.5" rx="15.2" ry="4.6" fill="#E8B84B" opacity=".55"/>
+      <circle cx="24" cy="22" r="13.4" fill="#FFF6E0" stroke="#E8B84B" stroke-width="1.5"/>
+    </svg>`;
+  }
+
+  // One of the four drawn friends is already a whole pawn, so it stands on its own.
+  // Anything else (emoji, photo) rides inside a lacquered gumdrop body instead.
+  function pawnMarkup(p) {
+    if (p.avatar && p.avatar.char) {
+      return `<svg class="pawn-char" viewBox="-24 -30 48 54"><use href="#${p.avatar.char}" x="-24" y="-30" width="48" height="54"/></svg>`;
+    }
+    return pawnBody(p.color) + `<span class="pawn-face">${avatarMarkup(p.avatar)}</span>`;
+  }
+
+  function buildTokens() {
+    boardInner.querySelectorAll('.token').forEach(el => el.remove());
+    tokens = [];
+    state.players.forEach((p, pi) => {
+      p.pawns.forEach((_, ki) => {
+        const el = document.createElement('div');
+        el.className = `token p${pi}`;
+        el.style.setProperty('--pc', p.color);
+        el.innerHTML = `<span class="ring"></span><span class="disc"></span>` +
+                       `<span class="token-inner">${pawnMarkup(p)}</span>` +
+                       `<span class="pick-arrow">👇</span>`;
+        el.addEventListener('click', () => onTokenClick(pi, ki));
+        boardInner.appendChild(el);
+        tokens.push({ el, pi, ki });
+      });
+    });
+  }
+  function tokenOf(pi, ki) { return tokens.find(t => t.pi === pi && t.ki === ki); }
+  function innerOf(pi, ki) { return tokenOf(pi, ki).el.querySelector('.token-inner'); }
+
+  const SHARE = {
+    1: [[0, 1.2]],
+    2: [[-3.4, -0.6], [3.4, 2.6]],
+    3: [[0, -2.4], [-3.9, 3.4], [3.9, 3.4]],
+    4: [[-3.4, -2.2], [3.4, -2.2], [-3.4, 4.2], [3.4, 4.2]],
+    5: [[0, -3.4], [-4.3, 0.2], [4.3, 0.2], [-2.6, 4.8], [2.6, 4.8]],
+    6: [[-3.4, -3.8], [3.4, -3.8], [-4.7, 0.6], [4.7, 0.6], [-3.4, 4.8], [3.4, 4.8]],
+  };
+
+  function layoutTokens() {
+    const groups = {};
+    state.players.forEach((p, pi) => {
+      p.pawns.forEach((step, ki) => {
+        const k = key(p.path[step]);
+        (groups[k] = groups[k] || []).push({ pi, ki });
+      });
+    });
+    Object.entries(groups).forEach(([k, list]) => {
+      const [c, r] = k.split(',').map(Number);
+      const { x, y } = cc([c, r]);
+      const offs = SHARE[Math.min(list.length, 6)] || SHARE[6];
+      list.forEach((t, j) => {
+        const [dx, dy] = offs[j % offs.length];
+        const el = tokenOf(t.pi, t.ki).el;
+        el.style.left = (x + dx) + '%';
+        el.style.top = (y + dy) + '%';
+      });
+    });
+  }
+
+  // A pawn tips slightly toward where it is heading — cheaper and cuter than
+  // drawing four facings, and it keeps every face pointed at the player.
+  function applyLeans() {
+    state.players.forEach((p, pi) => {
+      p.pawns.forEach((step, ki) => {
+        const t = tokenOf(pi, ki);
+        if (!t) return;
+        let lean = 0;
+        if (step < LAST) {
+          const a = cc(p.path[step]), b = cc(p.path[step + 1]);
+          lean = Math.abs(b.x - a.x) > Math.abs(b.y - a.y)
+            ? (b.x > a.x ? 8 : -8)
+            : (b.y > a.y ? -6 : 6);
+        }
+        t.el.style.setProperty('--lean', lean + 'deg');
+      });
+    });
+  }
+
+  function playAnim(el, anim) {
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = anim;
+  }
+  function setIdle(pi, ki) { innerOf(pi, ki).style.animation = ''; }
+
+  function shout(text, bg, cell) {
+    const el = document.createElement('div');
+    el.className = 'shout';
+    el.textContent = text;
+    el.style.background = bg;
+    if (cell) {
+      const { x, y } = cc(cell);
+      el.style.left = x + '%';
+      el.style.top = y + '%';
+    }
+    boardInner.appendChild(el);
+    setTimeout(() => el.remove(), 1150);
+  }
+
+  /* ---------- Rules ---------- */
+  function legalMoves(pi, roll) {
+    const p = state.players[pi];
+    const out = [];
+    p.pawns.forEach((step, ki) => {
+      if (step >= LAST) return;              // already at the lotus
+      if (step + roll <= LAST) out.push(ki);  // must land exactly
+    });
+    return out;
+  }
+
+  function captureAt(pi, cell) {
+    if (SAFE.has(key(cell))) return [];
+    const hits = [];
+    state.players.forEach((op, oi) => {
+      if (oi === pi) return;
+      op.pawns.forEach((step, ki) => {
+        if (step > 0 && step < LAST && key(op.path[step]) === key(cell)) hits.push({ oi, ki });
+      });
+    });
+    return hits;
+  }
+
+  /* ---------- Movement ---------- */
+  async function movePawn(pi, ki, roll) {
+    const p = state.players[pi];
+    const from = p.pawns[ki];
+    const tok = tokenOf(pi, ki);
+    tok.el.classList.add('selected');
+
+    for (let s = from + 1; s <= from + roll; s++) {
+      p.pawns[ki] = s;
+      layoutTokens();
+      applyLeans();
+      playAnim(innerOf(pi, ki), 'hopAnim 0.22s ease');
+      Sound.sfxHop();
+      await sleep(215);
+    }
+    setIdle(pi, ki);
+
+    const landed = p.path[p.pawns[ki]];
+
+    if (p.pawns[ki] === LAST) {
+      Sound.sfxHome();
+      shout('HOME! 🪷', 'linear-gradient(135deg,#F59E0B,#FDE047)', landed);
+      tok.el.classList.remove('selected');
+      playAnim(innerOf(pi, ki), 'bloom 0.8s ease forwards');
+      await sleep(760);
+      tok.el.style.display = 'none';
+      p.done++;
+      renderStrip();
+      fireworkShow(2, 110, 260, screenPos(CENTRE));
+      await sleep(300);
+      return;
+    }
+
+    Sound.sfxLand();
+
+    const hits = captureAt(pi, landed);
+    if (hits.length) {
+      Sound.sfxBoop();
+      shout('BOOP!', 'linear-gradient(135deg,#F43F8A,#FB7185)', landed);
+      for (const h of hits) {
+        const ht = tokenOf(h.oi, h.ki);
+        playAnim(ht.el.querySelector('.token-inner'), 'boopAway 0.6s ease forwards');
+      }
+      await sleep(620);
+      for (const h of hits) {
+        state.players[h.oi].pawns[h.ki] = 0;
+        const inner = tokenOf(h.oi, h.ki).el.querySelector('.token-inner');
+        layoutTokens();
+        applyLeans();
+        playAnim(inner, 'landPop 0.42s var(--bounce) forwards');
+      }
+      await sleep(440);
+      hits.forEach(h => setIdle(h.oi, h.ki));
+    } else if (SAFE.has(key(landed))) {
+      Sound.sfxSafe();
+    }
+
+    tok.el.classList.remove('selected');
+    await sleep(120);
+  }
+
+  /* ---------- Turn flow ---------- */
+  function isComputer(pi) { const p = state.players[pi]; return !!p && p.cpu; }
+  function setTrayEnabled(on) { shellTray.classList.toggle('disabled', !on); }
+  function setHint(t) { trayHint.innerHTML = t; }
+
+  function renderStrip() {
+    playerStrip.innerHTML = state.players.map((p, i) => `
+      <div class="p-row ${i === state.current && state.started && !state.over ? 'turn' : ''}" style="--pc:${p.color}">
+        <span class="p-face">${avatarMarkup(p.avatar)}</span>
+        <span class="p-name">${p.name}</span>
+        <span class="p-turn">TURN</span>
+        <span class="p-pips">${[0,1,2,3].map(n => `<i class="${n < p.done ? 'on' : ''}"></i>`).join('')}</span>
+      </div>`).join('');
+  }
+
+  function clearMovable() {
+    tokens.forEach(t => t.el.classList.remove('movable', 'selected'));
+    state.movable = [];
+  }
+
+  function highlightMovable() {
+    clearMovable();
+    state.movable = legalMoves(state.current, state.roll);
+    state.sel = 0;
+    state.movable.forEach(ki => tokenOf(state.current, ki).el.classList.add('movable'));
+    updateSelection();
+  }
+
+  function updateSelection() {
+    tokens.forEach(t => t.el.classList.remove('selected'));
+    if (state.phase !== 'choose' || !state.movable.length) return;
+    const ki = state.movable[state.sel % state.movable.length];
+    tokenOf(state.current, ki).el.classList.add('selected');
+  }
+
+  function cycleSelection(dir) {
+    if (state.phase !== 'choose' || state.movable.length < 2) return;
+    state.sel = (state.sel + dir + state.movable.length) % state.movable.length;
+    Sound.sfxHop();
+    updateSelection();
+  }
+
+  function onTokenClick(pi, ki) {
+    if (state.phase !== 'choose' || pi !== state.current) return;
+    if (isComputer(state.current)) return;
+    if (!state.movable.includes(ki)) return;
+    state.sel = state.movable.indexOf(ki);
+    commitMove(ki);
+  }
+
+  function confirmSelection() {
+    if (state.phase !== 'choose' || !state.movable.length) return;
+    commitMove(state.movable[state.sel % state.movable.length]);
+  }
+
+  async function commitMove(ki) {
+    if (state.phase !== 'choose') return;
+    state.phase = 'moving';
+    clearMovable();
+    setHint('');
+    const pi = state.current;
+    const roll = state.roll;
+
+    await movePawn(pi, ki, roll);
+
+    const p = state.players[pi];
+    if (p.done >= 4) { finish(pi); return; }
+
+    if (state.againPending) {
+      state.againPending = false;
+      state.phase = 'idle';
+      if (isComputer(pi)) scheduleComputer();
+      else { setTrayEnabled(true); shellTray.classList.add('again'); setHint('<span class="tapper">✨ Throw again!</span>'); }
+      return;
+    }
+
+    nextPlayer();
+  }
+
+  function nextPlayer() {
+    shellTray.classList.remove('again');
+    state.current = (state.current + 1) % state.players.length;
+    startTurn();
+  }
+
+  function startTurn() {
+    state.phase = 'idle';
+    state.roll = 0;
+    clearMovable();
+    renderStrip();
+    drawTurnMarks();
+    throwNum.classList.remove('show');
+    if (!state.started) {
+      setTrayEnabled(true);
+      setHint('<span class="tapper">👆 Tap the shells to start</span>');
+      return;
+    }
+    if (isComputer(state.current)) {
+      setTrayEnabled(false);
+      setHint('🤖 thinking…');
+      scheduleComputer();
+    } else {
+      setTrayEnabled(true);
+      setHint('<span class="tapper">👆 Tap to throw</span>');
+    }
+  }
+
+  async function doThrow() {
+    if (state.phase !== 'idle' || state.over) return;
+    state.phase = 'rolling';
+    setTrayEnabled(false);
+    shellTray.classList.remove('again');
+    setHint('');
+
+    const res = await animateThrow();
+    state.roll = res.value;
+    state.againPending = res.again;
+
+    if (res.again) {
+      shout(res.word + '!', 'linear-gradient(135deg,#7E22CE,#A855F7)', null);
+    }
+
+    const moves = legalMoves(state.current, state.roll);
+    if (!moves.length) {
+      Sound.sfxNope();
+      setHint('No moves 😅');
+      await sleep(1100);
+      if (state.againPending) {
+        state.againPending = false;
+        state.phase = 'idle';
+        if (isComputer(state.current)) scheduleComputer();
+        else { setTrayEnabled(true); shellTray.classList.add('again'); setHint('<span class="tapper">✨ Throw again!</span>'); }
+      } else {
+        nextPlayer();
+      }
+      return;
+    }
+
+    state.phase = 'choose';
+    highlightMovable();
+
+    if (isComputer(state.current)) {
+      setHint('🤖 choosing…');
+      await sleep(650);
+      commitMove(pickComputerMove(state.current, state.roll, moves));
+      return;
+    }
+
+    if (moves.length === 1) {
+      setHint('Off we go!');
+      await sleep(520);
+      if (state.phase === 'choose') commitMove(moves[0]);
+      return;
+    }
+    setHint('<span class="tapper">👆 Pick a friend</span>');
+  }
+
+  // Prefer a capture, then getting a pawn home, then the pawn furthest along.
+  function pickComputerMove(pi, roll, moves) {
+    const p = state.players[pi];
+    let best = moves[0], bestScore = -Infinity;
+    moves.forEach(ki => {
+      const dest = p.pawns[ki] + roll;
+      const cell = p.path[dest];
+      let score = dest;
+      if (dest === LAST) score += 100;
+      if (captureAt(pi, cell).length) score += 60;
+      if (SAFE.has(key(cell))) score += 12;
+      if (score > bestScore) { bestScore = score; best = ki; }
+    });
+    return best;
+  }
+
+  function scheduleComputer() {
+    setTimeout(() => { if (!state.over && state.phase === 'idle') doThrow(); }, 700);
+  }
+
+  /* ---------- Fireworks ---------- */
+  const FW_COLORS = ['#FFD54F', '#F5A623', '#C2185B', '#00897B', '#7B1FA2', '#38BDF8', '#FFF3D6', '#F43F8A'];
+
+  function burst(x, y, sparks, spread) {
+    const flash = document.createElement('div');
+    flash.className = 'fw-flash';
+    flash.style.left = x + 'px';
+    flash.style.top = y + 'px';
+    document.body.appendChild(flash);
+    flash.animate(
+      [{ transform: 'translate(-50%,-50%) scale(0.2)', opacity: 0.9 },
+       { transform: 'translate(-50%,-50%) scale(1.7)', opacity: 0 }],
+      { duration: 420, easing: 'ease-out', fill: 'forwards' });
+    setTimeout(() => flash.remove(), 460);
+
+    for (let i = 0; i < sparks; i++) {
+      const a = (i / sparks) * Math.PI * 2 + Math.random() * 0.35;
+      const d = spread * (0.5 + Math.random() * 0.7);
+      const dx = Math.cos(a) * d, dy = Math.sin(a) * d;
+      const dur = 750 + Math.random() * 550;
+      const el = document.createElement('div');
+      el.className = 'fw-spark';
+      const col = FW_COLORS[(Math.random() * FW_COLORS.length) | 0];
+      el.style.background = col;
+      el.style.boxShadow = `0 0 9px ${col}`;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      document.body.appendChild(el);
+      el.animate(
+        [{ transform: 'translate(-50%,-50%) scale(1)', opacity: 1 },
+         { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy * 0.8}px)) scale(0.85)`, opacity: 1, offset: 0.55 },
+         { transform: `translate(calc(-50% + ${dx * 1.15}px), calc(-50% + ${dy + 110}px)) scale(0.25)`, opacity: 0 }],
+        { duration: dur, easing: 'cubic-bezier(0.12,0.7,0.35,1)', fill: 'forwards' });
+      setTimeout(() => el.remove(), dur + 60);
+    }
+  }
+
+  // Where a board cell sits on screen, so a burst can be centred on the lotus.
+  function screenPos(cell) {
+    const r = boardInner.getBoundingClientRect();
+    const { x, y } = cc(cell);
+    return { x: r.left + (x / 100) * r.width, y: r.top + (y / 100) * r.height };
+  }
+
+  function fireworkShow(shots, spread, gap, origin) {
+    for (let i = 0; i < shots; i++) {
+      setTimeout(() => {
+        const p = origin
+          ? { x: origin.x + (Math.random() - 0.5) * 90, y: origin.y + (Math.random() - 0.5) * 90 }
+          : { x: window.innerWidth * (0.15 + Math.random() * 0.7),
+              y: window.innerHeight * (0.12 + Math.random() * 0.45) };
+        burst(p.x, p.y, 14 + Math.floor(Math.random() * 10), spread);
+      }, i * gap);
+    }
+  }
+
+  function finish(pi) {
+    state.over = true;
+    state.phase = 'idle';
+    setTrayEnabled(false);
+    shellTray.classList.remove('again');
+    setHint('');
+    clearMovable();
+    drawTurnMarks();
+    renderStrip();
+    const winner = state.players[pi];
+    Sound.sfxWin();
+    fireworkShow(14, 210, 230);
+
+    resultAvatars.innerHTML = state.players
+      .map((p, i) => `<span class="${i === pi ? 'winner' : ''}"${i === pi ? '' : ' style="opacity:.4"'}>${avatarMarkup(p.avatar)}</span>`)
+      .join(' ');
+    if (winner.cpu) {
+      resultTitle.textContent = 'Computer wins!';
+      resultSub.textContent = 'So close — try again! 🤖';
+    } else if (state.mode === '1p') {
+      resultTitle.textContent = 'You won! 🎉';
+      resultSub.textContent = 'All four friends made it to the lotus!';
+    } else {
+      resultTitle.textContent = `${winner.name} wins! 🎉`;
+      resultSub.textContent = 'Great game — play again?';
+    }
+    setTimeout(() => resultBackdrop.classList.remove('hidden'), 800);
+  }
+
+  /* ---------- Players ---------- */
+  function buildPlayers() {
+    let list;
+    if (state.mode === '1p') {
+      const me = AVATAR_BY_ID[state.avatarIds[0]] || AVATAR_SET[0];
+      list = [
+        { name: 'You', avatar: me, color: me.color, cpu: false },
+        { name: 'Computer', avatar: ROBOT, color: ROBOT.color, cpu: true },
+      ];
+    } else {
+      list = [];
+      for (let i = 0; i < state.playerCount; i++) {
+        const a = AVATAR_BY_ID[state.avatarIds[i]] || AVATAR_SET[i % AVATAR_SET.length];
+        list.push({ name: `Player ${i + 1}`, avatar: a, color: a.color, cpu: false });
+      }
+    }
+    list.forEach((p, i) => {
+      p.home = HOME_IDX[i];
+      p.path = pathFor(p.home);
+      p.pawns = [0, 0, 0, 0];
+      p.done = 0;
+    });
+    state.players = list;
+  }
+
+  /* ---------- Icon picker ---------- */
+  function humanLabel(i) { return state.mode === '1p' ? 'You' : `P${i + 1}`; }
+
+  function buildIconChips() {
+    iconChips.innerHTML = '';
+    state.players.forEach((p, i) => {
+      if (p.cpu) return;
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'icon-chip';
+      btn.style.setProperty('--pc', p.color);
+      btn.innerHTML = `<span class="ic-face">${avatarMarkup(p.avatar)}</span><span class="ic-label">${humanLabel(i)}</span>`;
+      btn.addEventListener('click', () => openPicker(i));
+      iconChips.appendChild(btn);
+    });
+  }
+
+  let pickerIndex = 0;
+  function buildAvatarGrid() {
+    avatarGrid.innerHTML = AVATAR_SET.map(a =>
+      `<button type="button" class="avatar-opt" data-id="${a.id}" style="--pc:${a.color}" aria-label="${a.label}">${avatarMarkup(a)}</button>`
+    ).join('');
+    avatarGrid.querySelectorAll('.avatar-opt').forEach(btn =>
+      btn.addEventListener('click', () => chooseAvatar(btn.dataset.id)));
+  }
+  function openPicker(i) {
+    pickerIndex = i;
+    pickerTitle.textContent = state.mode === '1p' ? 'Pick your icon' : `Player ${i + 1}’s icon`;
+    avatarGrid.querySelectorAll('.avatar-opt').forEach(b =>
+      b.classList.toggle('selected', b.dataset.id === state.avatarIds[i]));
+    pickerBackdrop.classList.remove('hidden');
+  }
+  function chooseAvatar(id) {
+    state.avatarIds[pickerIndex] = id;
+    saveAvatars();
+    pickerBackdrop.classList.add('hidden');
+    resetGame();
+  }
+
+  /* ---------- Reset ---------- */
+  function resetGame() {
+    state.current = 0;
+    state.started = false;
+    state.over = false;
+    state.phase = 'idle';
+    state.roll = 0;
+    state.againPending = false;
+    buildPlayers();
+    buildBoard();
+    buildTokens();
+    buildIconChips();
+    tokens.forEach(t => { t.el.style.display = ''; t.el.style.transition = 'none'; });
+    layoutTokens();
+    applyLeans();
+    void boardInner.offsetWidth;
+    tokens.forEach(t => t.el.style.transition = '');
+    showShells([1, 1, 0, 0]);
+    throwNum.classList.remove('show');
+    shellTray.classList.remove('again');
+    controls.classList.remove('locked');
+    resultBackdrop.classList.add('hidden');
+    renderStrip();
+    drawTurnMarks();
+    startTurn();
+  }
+
+  /* ---------- Backdrop: a festival courtyard ---------- */
+  function buildFestival() {
+    const garden = $('#garden');
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const frag = document.createDocumentFragment();
+
+    ['left', 'right'].forEach(side => {
+      const toran = document.createElement('div');
+      toran.className = 'toran ' + side;
+      for (let i = 0; i < 7; i++) {
+        const leaf = document.createElement('i');
+        leaf.style.height = rand(16, 34).toFixed(0) + 'px';
+        leaf.style.animationDelay = (-rand(0, 3)).toFixed(2) + 's';
+        toran.appendChild(leaf);
+      }
+      frag.appendChild(toran);
+    });
+
+    // Bells hang beside each toran, at staggered drops, clear of the controls.
+    [[3, 30], [8.5, 54], [14, 36], [86, 36], [91.5, 56], [97, 28]].forEach(([left, drop], i) => {
+      const bell = document.createElement('div');
+      bell.className = 'bell';
+      bell.style.left = left + '%';
+      bell.style.setProperty('--drop', drop + 'px');
+      bell.style.setProperty('--dur', (3.0 + (i % 3) * 0.6).toFixed(1) + 's');
+      bell.style.setProperty('--delay', (-i * 0.45).toFixed(2) + 's');
+      bell.innerHTML = '<span class="cord"></span><span class="clapper">🔔</span>';
+      frag.appendChild(bell);
+    });
+
+    const makeDiya = (scale) => {
+      const diya = document.createElement('div');
+      diya.className = 'diya';
+      diya.style.transform = `scale(${scale})`;
+      diya.innerHTML = '<span class="glow"></span><span class="flame"></span><span class="bowl"></span>';
+      diya.querySelector('.flame').style.animationDelay = (-rand(0, 1.5)).toFixed(2) + 's';
+      diya.querySelector('.glow').style.animationDelay = (-rand(0, 2.6)).toFixed(2) + 's';
+      return diya;
+    };
+
+    // Lamps line both side walls at an even rhythm.
+    [4, 92].forEach(left => {
+      for (let i = 0; i < 4; i++) {
+        const diya = makeDiya(0.85);
+        diya.style.left = left + '%';
+        diya.style.top = (30 + i * 16) + '%';
+        frag.appendChild(diya);
+      }
+    });
+
+    // Slow wheels sit low on the side walls, well clear of the top.
+    [[2, 52], [88, 46]].forEach(([left, top], i) => {
+      const wheel = document.createElement('div');
+      wheel.className = 'rangoli';
+      wheel.style.width = wheel.style.height = '132px';
+      wheel.style.left = left + '%';
+      wheel.style.top = top + '%';
+      wheel.style.setProperty('--dur', (48 + i * 14) + 's');
+      if (i) wheel.style.animationDirection = 'reverse';
+      frag.appendChild(wheel);
+    });
+
+    const ground = document.createElement('div');
+    ground.className = 'ground';
+    frag.appendChild(ground);
+
+    // A planted border: even spacing, alternating height and size.
+    const bloom = ['🌼','🏵️','🌸','🌺','🪷'];
+    const count = 15;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('span');
+      el.className = 'deco flower';
+      el.textContent = bloom[i % bloom.length];
+      el.style.left = (3 + i * (94 / (count - 1))).toFixed(2) + '%';
+      el.style.bottom = (i % 2 ? 46 : 14) + 'px';
+      el.style.fontSize = i % 2 ? 'clamp(17px, 3vw, 28px)' : 'clamp(21px, 3.9vw, 36px)';
+      el.style.setProperty('--dur', (3.4 + (i % 4) * 0.45).toFixed(2) + 's');
+      el.style.setProperty('--delay', (-i * 0.3).toFixed(2) + 's');
+      frag.appendChild(el);
+    }
+
+    // Lamps set between the plants along the ground.
+    for (let i = 0; i < 5; i++) {
+      const diya = makeDiya(0.95);
+      diya.style.left = (10 + i * 19).toFixed(1) + '%';
+      diya.style.bottom = '6px';
+      frag.appendChild(diya);
+    }
+
+    [12, 47, 83].forEach((left, i) => {
+      const bird = document.createElement('span');
+      bird.className = 'peacock';
+      bird.textContent = '🦚';
+      bird.style.left = left + '%';
+      bird.style.bottom = (i === 1 ? 34 : 22) + 'px';
+      bird.style.setProperty('--dur', (3.2 + i * 0.6).toFixed(1) + 's');
+      bird.style.setProperty('--delay', (-i * 0.8).toFixed(1) + 's');
+      frag.appendChild(bird);
+    });
+
+    garden.appendChild(frag);
+  }
+
+  /* ---------- Wire up ---------- */
+  function wireSeg(segEl, defaultValue, onChange) {
+    const btns = segEl.querySelectorAll('.seg-btn');
+    const select = (val) => {
+      btns.forEach(b => {
+        const active = b.dataset.value === val;
+        b.classList.toggle('selected', active);
+        b.setAttribute('aria-checked', active ? 'true' : 'false');
+      });
+      segEl.dataset.value = val;
+      if (onChange) onChange(val);
+    };
+    btns.forEach(b => b.addEventListener('click', () => { Sound.init(); select(b.dataset.value); }));
+    select(defaultValue);
+  }
+
+  function isModalOpen() {
+    return !resultBackdrop.classList.contains('hidden')
+      || !confirmBackdrop.classList.contains('hidden')
+      || !pickerBackdrop.classList.contains('hidden');
+  }
+
+  // Any panel that should swallow a "tap to start".
+  function anyOverlayOpen() {
+    return isModalOpen()
+      || !!document.querySelector('.music-picker-backdrop:not(.hidden), .fz-info-backdrop:not(.hidden)');
+  }
+
+  buildFestival();
+  buildShells();
+  buildAvatarGrid();
+
+  wireSeg(modeSeg, '1p', (val) => {
+    state.mode = val;
+    countRow.classList.toggle('hidden', val !== '2p');
+    resetGame();
+  });
+  wireSeg(countSeg, '2', (val) => { state.playerCount = +val; resetGame(); });
+
+  async function enterGameplay() {
+    if (state.started) return;
+    Sound.init();
+    state.started = true;
+    controls.classList.add('locked');
+    document.body.classList.add('playing');
+    drawTurnMarks();
+    renderStrip();
+    startTurn();
+  }
+
+  // No Play button: a tap anywhere on the setup screen (or space/enter/tab) begins the game.
+  document.addEventListener('pointerdown', (e) => {
+    if (state.started || anyOverlayOpen()) return;
+    if (e.target instanceof Element && e.target.closest('.controls, .topbar')) return;
+    enterGameplay();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (state.started || anyOverlayOpen()) return;
+    if (e.key !== ' ' && e.key !== 'Enter' && e.key !== 'Tab') return;
+    if (e.key !== 'Tab') e.preventDefault();
+    enterGameplay();
+  });
+
+  const onTray = () => {
+    Sound.init();
+    if (anyOverlayOpen() || state.over) return;
+    if (!state.started) { enterGameplay(); return; }
+    if (isComputer(state.current)) return;
+    if (shellTray.classList.contains('disabled')) return;
+    doThrow();
+  };
+  shellTray.addEventListener('click', onTray);
+  shellTray.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onTray(); }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (isModalOpen() || !state.started || state.over) return;
+    const a = document.activeElement;
+    const inWidget = a && (a.tagName === 'BUTTON' || a.tagName === 'A' || a.getAttribute('role') === 'radio');
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); cycleSelection(-1); return; }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); cycleSelection(1); return; }
+    if (e.key !== ' ' && e.key !== 'Enter') return;
+    if (inWidget && a !== shellTray) return;
+    e.preventDefault();
+    if (isComputer(state.current)) return;
+    if (state.phase === 'choose') confirmSelection();
+    else if (state.phase === 'idle') onTray();
+  });
+
+  let confirmAction = null;
+  function askConfirm(action) { confirmAction = action; confirmBackdrop.classList.remove('hidden'); }
+  function exitToSettings() { document.body.classList.remove('playing'); resetGame(); }
+
+  restartBtn.addEventListener('click', () => {
+    Sound.init();
+    if (state.started && !state.over) askConfirm(resetGame);
+    else resetGame();
+  });
+  closeBtn.addEventListener('click', () => {
+    Sound.init();
+    if (state.started && !state.over) askConfirm(exitToSettings);
+    else exitToSettings();
+  });
+  confirmYesBtn.addEventListener('click', () => {
+    confirmBackdrop.classList.add('hidden');
+    const a = confirmAction; confirmAction = null;
+    if (a) a();
+  });
+  confirmNoBtn.addEventListener('click', () => { confirmBackdrop.classList.add('hidden'); confirmAction = null; });
+  pickerCloseBtn.addEventListener('click', () => { pickerBackdrop.classList.add('hidden'); });
+  pickerBackdrop.addEventListener('click', (e) => { if (e.target === pickerBackdrop) pickerBackdrop.classList.add('hidden'); });
+  playAgainBtn.addEventListener('click', () => {
+    resultBackdrop.classList.add('hidden');
+    resetGame();
+    enterGameplay();
+  });
+  homeBtn.addEventListener('click', () => {
+    resultBackdrop.classList.add('hidden');
+    resetGame();
+  });
+
+  soundBtn.addEventListener('click', () => {
+    FunZoneMusic.openPicker();
+  });
+
+  resetGame();
+  </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Mira">
+  <!-- pigtails -->
+  <path d="M24 44 q-12 6 -12 26 q0 12 8 18 q7 -3 7 -14 z" fill="#E11D74" stroke="#9D174D" stroke-width="2.5"/>
+  <path d="M76 44 q12 6 12 26 q0 12 -8 18 q-7 -3 -7 -14 z" fill="#E11D74" stroke="#9D174D" stroke-width="2.5"/>
+  <!-- back hair -->
+  <path d="M24 50 Q20 22 50 20 Q80 22 76 50 L72 60 Q64 54 58 58 L42 58 Q36 54 28 60 Z" fill="#E11D74" stroke="#9D174D" stroke-width="2.5"/>
+  <!-- ties -->
+  <circle cx="24" cy="44" r="4.5" fill="#F9A8D4" stroke="#9D174D" stroke-width="1.5"/>
+  <circle cx="76" cy="44" r="4.5" fill="#F9A8D4" stroke="#9D174D" stroke-width="1.5"/>
+  <!-- face -->
+  <path d="M31 46 Q31 76 50 80 Q69 76 69 46 Q69 35 50 35 Q31 35 31 46 Z" fill="#F6D3B0" stroke="#C88E63" stroke-width="1.5"/>
+  <!-- fringe -->
+  <path d="M30 47 Q33 30 50 30 Q67 30 70 47 Q60 38 50 40 Q40 38 30 47 Z" fill="#E11D74" stroke="#9D174D" stroke-width="2"/>
+  <!-- eyebrows -->
+  <path d="M36 53 Q41 49 46 52" stroke="#9D174D" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M54 52 Q59 49 64 53" stroke="#9D174D" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- eyes -->
+  <ellipse cx="41" cy="61" rx="4" ry="4.8" fill="#5A2A32"/>
+  <ellipse cx="59" cy="61" rx="4" ry="4.8" fill="#5A2A32"/>
+  <circle cx="42.2" cy="59.5" r="1.3" fill="#fff"/>
+  <circle cx="60.2" cy="59.5" r="1.3" fill="#fff"/>
+  <!-- smile -->
+  <path d="M43 69 Q50 77 57 69 Q56 78 50 79 Q44 78 43 69 Z" fill="#9F3452" stroke="#B45C3A" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M46 75 Q50 77 54 75" stroke="#F9A8B8" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</svg>

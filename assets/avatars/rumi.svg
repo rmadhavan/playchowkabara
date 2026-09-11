@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Rumi">
+  <!-- braid -->
+  <path d="M70 46 q14 8 12 30 q-1 10 -9 14" fill="none" stroke="#7C3AED" stroke-width="10" stroke-linecap="round"/>
+  <g fill="#5B21B6">
+    <ellipse cx="76" cy="58" rx="6" ry="5"/>
+    <ellipse cx="79" cy="70" rx="6" ry="5"/>
+    <ellipse cx="76" cy="82" rx="5.5" ry="5"/>
+  </g>
+  <!-- back hair -->
+  <path d="M22 52 Q16 20 50 16 Q84 20 78 52 L74 66 Q66 58 60 64 L40 64 Q34 58 26 66 Z" fill="#7C3AED" stroke="#4C1D95" stroke-width="2.5"/>
+  <!-- top knot -->
+  <ellipse cx="50" cy="17" rx="15" ry="11" fill="#8B5CF6" stroke="#4C1D95" stroke-width="2.5"/>
+  <!-- face -->
+  <path d="M30 46 Q30 76 50 80 Q70 76 70 46 Q70 35 50 35 Q30 35 30 46 Z" fill="#F6D3B0" stroke="#C88E63" stroke-width="1.5"/>
+  <!-- fringe -->
+  <path d="M29 47 Q32 30 50 30 Q68 30 71 47 Q60 39 50 41 Q40 39 29 47 Z" fill="#8B5CF6" stroke="#4C1D95" stroke-width="2"/>
+  <!-- eyebrows -->
+  <path d="M35 51 q6 -3 11 -1" stroke="#5B21B6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <path d="M54 50 q5 -2 11 1" stroke="#5B21B6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- eyes -->
+  <ellipse cx="41" cy="59" rx="4" ry="5.2" fill="#5A3825"/>
+  <ellipse cx="59" cy="59" rx="4" ry="5.2" fill="#5A3825"/>
+  <circle cx="42.4" cy="57.2" r="1.4" fill="#fff"/>
+  <circle cx="60.4" cy="57.2" r="1.4" fill="#fff"/>
+  <!-- smile -->
+  <path d="M44 69 Q50 74 56 69" stroke="#B45C3A" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <!-- earring -->
+  <circle cx="30" cy="68" r="2.6" fill="none" stroke="#C0C7CE" stroke-width="2"/>
+</svg>

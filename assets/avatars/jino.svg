@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Jino">
+  <!-- hair back -->
+  <path d="M26 50 Q22 20 50 18 Q78 20 74 50 L71 60 Q64 54 58 58 L42 58 Q36 54 29 60 Z" fill="#232A34" stroke="#0F141B" stroke-width="2.5"/>
+  <!-- face -->
+  <path d="M31 48 Q31 76 50 80 Q69 76 69 48 Q69 37 50 37 Q31 37 31 48 Z" fill="#F2C79E" stroke="#C88E63" stroke-width="1.5"/>
+  <!-- fringe swoosh -->
+  <path d="M29 49 Q31 30 50 30 Q70 30 71 49 Q60 39 46 41 Q38 42 29 49 Z" fill="#232A34" stroke="#0F141B" stroke-width="2"/>
+  <!-- blue streak -->
+  <path d="M55 32 Q66 35 68 48" stroke="#38BDF8" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <!-- eyebrows -->
+  <path d="M36 52 q6 -2 10 0" stroke="#0F141B" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <path d="M54 52 q6 -2 10 0" stroke="#0F141B" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+  <!-- eyes -->
+  <ellipse cx="42" cy="59" rx="3.8" ry="4.6" fill="#3B2A22"/>
+  <ellipse cx="58" cy="59" rx="3.8" ry="4.6" fill="#3B2A22"/>
+  <circle cx="43.2" cy="57.6" r="1.3" fill="#fff"/>
+  <circle cx="59.2" cy="57.6" r="1.3" fill="#fff"/>
+  <!-- smirk -->
+  <path d="M44 69 Q50 73 57 68" stroke="#8A5038" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+</svg>
