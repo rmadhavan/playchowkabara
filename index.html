@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#FFF1F5" />
-  <meta name="application-version" content="1.0.0" />
+  <meta name="application-version" content="1.0.1" />
   <meta name="description" content="Play Chowka Bara, the classic South Indian race game, online with friends or against the computer." />
   <link rel="canonical" href="https://playchowkabara.com/" />
   <meta property="og:type" content="website" />
@@ -1777,6 +1777,10 @@
     return gattiMembers(pi, ki).length === 2 ? (roll % 2 === 0 ? roll / 2 : 0) : roll;
   }
 
+  function selectionUnit(pi, ki) {
+    return gattiMembers(pi, ki);
+  }
+
   function legalMoves(pi, roll) {
     const p = state.players[pi];
     const out = [];
@@ -1890,7 +1894,7 @@
     state.movable = legalMoves(state.current, state.roll);
     state.sel = 0;
     state.movable.forEach(ki => {
-      gattiMembers(state.current, ki).forEach(member => tokenOf(state.current, member).el.classList.add('movable'));
+      selectionUnit(state.current, ki).forEach(member => tokenOf(state.current, member).el.classList.add('movable'));
     });
     updateSelection();
   }
@@ -1899,7 +1903,7 @@
     tokens.forEach(t => t.el.classList.remove('selected'));
     if (state.phase !== 'choose' || !state.movable.length) return;
     const ki = state.movable[state.sel % state.movable.length];
-    gattiMembers(state.current, ki).forEach(member => tokenOf(state.current, member).el.classList.add('selected'));
+    selectionUnit(state.current, ki).forEach(member => tokenOf(state.current, member).el.classList.add('selected'));
   }
 
   function cycleSelection(dir) {
@@ -1912,10 +1916,10 @@
   function onTokenClick(pi, ki) {
     if (state.phase !== 'choose' || pi !== state.current) return;
     if (isComputer(state.current)) return;
-    ki = gattiMembers(pi, ki)[0];
-    if (!state.movable.includes(ki)) return;
-    state.sel = state.movable.indexOf(ki);
-    commitMove(ki);
+    const move = state.movable.find(moveIndex => selectionUnit(pi, moveIndex).includes(ki));
+    if (move === undefined) return;
+    state.sel = state.movable.indexOf(move);
+    commitMove(move);
   }
 
   function confirmSelection() {
