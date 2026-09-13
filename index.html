@@ -889,6 +889,7 @@
       <ul>
         <li>Throw the 4 shells. <b>Open mouths</b> count — 1, 2 or 3 steps.</li>
         <li>All four mouths is <b>CHOWKA (4)</b>, all four humps is <b>BAARA (8)</b> — both let you throw again!</li>
+        <li>Two friends together form a <b>gatti</b>. It moves on even throws at half speed: 2 → 1, 4 → 2, 8 → 4.</li>
         <li>Tap a bouncing friend to move them, or use <b>← →</b> and <b>Enter</b>.</li>
         <li>Land on someone and they go <b>BOOP</b> back home.</li>
         <li>The four <b>star squares</b> are safe — nobody can be booped there.</li>
@@ -1753,12 +1754,27 @@
   }
 
   /* ---------- Rules ---------- */
+  function gattiMembers(pi, ki) {
+    const p = state.players[pi];
+    const step = p.pawns[ki];
+    if (step <= 0 || step >= LAST) return [ki];
+    const members = p.pawns.map((pawnStep, index) => pawnStep === step ? index : -1).filter(index => index >= 0);
+    return members.length === 2 ? members : [ki];
+  }
+
+  function moveDistance(pi, ki, roll) {
+    return gattiMembers(pi, ki).length === 2 ? (roll % 2 === 0 ? roll / 2 : 0) : roll;
+  }
+
   function legalMoves(pi, roll) {
     const p = state.players[pi];
     const out = [];
     p.pawns.forEach((step, ki) => {
       if (step >= LAST) return;              // already at the lotus
-      if (step + roll <= LAST) out.push(ki);  // must land exactly
+      const members = gattiMembers(pi, ki);
+      if (members[0] !== ki) return;          // a gatti is one move, not two choices
+      const distance = moveDistance(pi, ki, roll);
+      if (distance && step + distance <= LAST) out.push(ki);  // must land exactly
     });
     return out;
   }
@@ -1779,29 +1795,31 @@
   async function movePawn(pi, ki, roll) {
     const p = state.players[pi];
     const from = p.pawns[ki];
-    const tok = tokenOf(pi, ki);
-    tok.el.classList.add('selected');
+    const members = gattiMembers(pi, ki);
+    const distance = moveDistance(pi, ki, roll);
+    const movingTokens = members.map(member => tokenOf(pi, member));
+    movingTokens.forEach(tok => tok.el.classList.add('selected'));
 
-    for (let s = from + 1; s <= from + roll; s++) {
-      p.pawns[ki] = s;
+    for (let s = from + 1; s <= from + distance; s++) {
+      members.forEach(member => { p.pawns[member] = s; });
       layoutTokens();
       applyLeans();
-      playAnim(innerOf(pi, ki), 'hopAnim 0.22s ease');
+      members.forEach(member => playAnim(innerOf(pi, member), 'hopAnim 0.22s ease'));
       Sound.sfxHop();
       await sleep(215);
     }
-    setIdle(pi, ki);
+    members.forEach(member => setIdle(pi, member));
 
     const landed = p.path[p.pawns[ki]];
 
     if (p.pawns[ki] === LAST) {
       Sound.sfxHome();
       shout('HOME! 🪷', 'linear-gradient(135deg,#F59E0B,#FDE047)', landed);
-      tok.el.classList.remove('selected');
-      playAnim(innerOf(pi, ki), 'bloom 0.8s ease forwards');
+      movingTokens.forEach(tok => tok.el.classList.remove('selected'));
+      members.forEach(member => playAnim(innerOf(pi, member), 'bloom 0.8s ease forwards'));
       await sleep(760);
-      tok.el.style.display = 'none';
-      p.done++;
+      movingTokens.forEach(tok => { tok.el.style.display = 'none'; });
+      p.done += members.length;
       renderStrip();
       fireworkShow(2, 110, 260, screenPos(CENTRE));
       await sleep(300);
@@ -1832,7 +1850,7 @@
       Sound.sfxSafe();
     }
 
-    tok.el.classList.remove('selected');
+    movingTokens.forEach(tok => tok.el.classList.remove('selected'));
     await sleep(120);
   }
 
@@ -1860,7 +1878,9 @@
     clearMovable();
     state.movable = legalMoves(state.current, state.roll);
     state.sel = 0;
-    state.movable.forEach(ki => tokenOf(state.current, ki).el.classList.add('movable'));
+    state.movable.forEach(ki => {
+      gattiMembers(state.current, ki).forEach(member => tokenOf(state.current, member).el.classList.add('movable'));
+    });
     updateSelection();
   }
 
@@ -1868,7 +1888,7 @@
     tokens.forEach(t => t.el.classList.remove('selected'));
     if (state.phase !== 'choose' || !state.movable.length) return;
     const ki = state.movable[state.sel % state.movable.length];
-    tokenOf(state.current, ki).el.classList.add('selected');
+    gattiMembers(state.current, ki).forEach(member => tokenOf(state.current, member).el.classList.add('selected'));
   }
 
   function cycleSelection(dir) {
@@ -1881,6 +1901,7 @@
   function onTokenClick(pi, ki) {
     if (state.phase !== 'choose' || pi !== state.current) return;
     if (isComputer(state.current)) return;
+    ki = gattiMembers(pi, ki)[0];
     if (!state.movable.includes(ki)) return;
     state.sel = state.movable.indexOf(ki);
     commitMove(ki);
@@ -1998,7 +2019,7 @@
     const p = state.players[pi];
     let best = moves[0], bestScore = -Infinity;
     moves.forEach(ki => {
-      const dest = p.pawns[ki] + roll;
+      const dest = p.pawns[ki] + moveDistance(pi, ki, roll);
       const cell = p.path[dest];
       let score = dest;
       if (dest === LAST) score += 100;
