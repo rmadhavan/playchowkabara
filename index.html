@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#FFF1F5" />
+  <meta name="application-version" content="1.0.0" />
   <meta name="description" content="Play Chowka Bara, the classic South Indian race game, online with friends or against the computer." />
   <link rel="canonical" href="https://playchowkabara.com/" />
   <meta property="og:type" content="website" />
@@ -19,6 +20,14 @@
   <style>
     /* ---- Top bar ---- */
     .topbar .title { padding-right: 0; }
+    .game-version {
+      margin-left: 3px;
+      color: var(--ink-soft);
+      font-family: 'Nunito', sans-serif;
+      font-size: 10px;
+      font-weight: 800;
+      vertical-align: middle;
+    }
     .sound-btn {
       display: inline-flex;
       align-items: center;
@@ -858,7 +867,7 @@
     <div class="topbar">
       <a class="back" id="topHome" href="/" aria-label="Restart Chowka Bara">↺ Restart</a>
       <button class="back close-x" id="closeBtn" aria-label="Close game and go to settings">✕ Close</button>
-      <div class="title">Chowka Bara</div>
+      <div class="title">Chowka Bara <span class="game-version"></span></div>
       <button class="sound-btn" id="soundBtn" aria-label="Toggle music">🔊</button>
     </div>
 
@@ -963,6 +972,8 @@
 
   const $ = (s) => document.querySelector(s);
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  const GAME_VERSION = $('meta[name="application-version"]').content;
+  $('.game-version').textContent = `v${GAME_VERSION}`;
 
   /* ---------- Geometry: 5x5 grid inside an ornamental border, viewBox 0..100 ---------- */
   const PAD = 7.2;                 // width of the painted border band
