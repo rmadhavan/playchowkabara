@@ -20,13 +20,13 @@
   <style>
     /* ---- Top bar ---- */
     .topbar .title { padding-right: 0; }
-    .game-version {
-      margin-left: 3px;
+    .info-version {
+      margin: 14px 0 0;
       color: var(--ink-soft);
       font-family: 'Nunito', sans-serif;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 800;
-      vertical-align: middle;
+      text-align: center;
     }
     .sound-btn {
       display: inline-flex;
@@ -924,7 +924,7 @@
     <div class="topbar">
       <a class="back" id="topHome" href="/" aria-label="Restart Chowka Bara">↺ Restart</a>
       <button class="back close-x" id="closeBtn" aria-label="Close game and go to settings">✕ Close</button>
-      <div class="title">Chowka Bara <span class="game-version"></span></div>
+      <div class="title">Chowka Bara</div>
       <button class="sound-btn" id="soundBtn" aria-label="Toggle music">🔊</button>
     </div>
 
@@ -973,6 +973,7 @@
         <li>Two friends on one square pair up as a <b>tollu</b> 🔗 — still boopable.</li>
         <li>Roll a <b>2</b> to toughen a tollu into a <b>gatti</b> 🛡️: it moves together at half speed on even rolls (2 → 1, 4 → 2, 8 → 4), and only another gatti can pass or boop it.</li>
       </ul>
+      <p class="info-version">Version <span class="game-version"></span></p>
     </template>
 
     <div class="play-area">
@@ -1042,7 +1043,7 @@
   const $ = (s) => document.querySelector(s);
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   const GAME_VERSION = $('meta[name="application-version"]').content;
-  $('.game-version').textContent = `v${GAME_VERSION}`;
+  $('#gameInfo').content.querySelector('.game-version').textContent = `v${GAME_VERSION}`;
 
   /* ---------- Geometry: 5x5 grid inside an ornamental border, viewBox 0..100 ---------- */
   const PAD = 7.2;                 // width of the painted border band
