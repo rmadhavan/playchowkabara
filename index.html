@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#FFF1F5" />
-  <meta name="application-version" content="1.0.1" />
+  <meta name="application-version" content="1.1.0" />
   <meta name="description" content="Play Chowka Bara, the classic South Indian race game, online with friends or against the computer." />
   <link rel="canonical" href="https://playchowkabara.com/" />
   <meta property="og:type" content="website" />
@@ -223,6 +223,63 @@
       0%   { transform: scale(1); opacity: 1; }
       50%  { transform: scale(1.5) rotate(180deg); opacity: 1; }
       100% { transform: scale(0.2) rotate(360deg); opacity: 0; }
+    }
+
+    /* ---- Gatti and tollu states (advanced rules) ---- */
+    .token.gatti { z-index: 8; }
+    .token.gatti .pawn-body {
+      filter: drop-shadow(0 0 5px rgba(245,166,35,0.95))
+              drop-shadow(0 3px 3px rgba(0,0,0,0.32));
+    }
+    .token.gatti .token-inner { transform: scale(1.12); }
+    .token.gatti .token-inner::after {
+      content: "";
+      position: absolute;
+      left: 50%; top: 46%;
+      width: 150%; height: 150%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 2.5px solid #F5A623;
+      box-shadow: 0 0 8px rgba(245,166,35,0.7), inset 0 0 6px rgba(255,243,214,0.6);
+      pointer-events: none;
+      animation: gattiRing 1.5s ease-in-out infinite;
+    }
+    .token .gatti-badge {
+      position: absolute;
+      left: 50%; top: -34%;
+      transform: translateX(-50%);
+      font-size: clamp(11px, 3.2vw, 17px);
+      line-height: 1;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+      pointer-events: none;
+      display: none;
+    }
+    .token.gatti .gatti-badge { display: block; }
+    .token.gatti .gatti-badge::after { content: "🛡️"; }
+    .token.tollu:not(.gatti) .gatti-badge { display: block; font-size: clamp(9px, 2.6vw, 14px); }
+    .token.tollu:not(.gatti) .gatti-badge::after { content: "🔗"; }
+    .token.tollu:not(.gatti) .token-inner::after {
+      content: "";
+      position: absolute;
+      left: 50%; top: 46%;
+      width: 138%; height: 138%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 2px dashed rgba(126, 34, 206, 0.5);
+      pointer-events: none;
+    }
+    @keyframes gattiRing {
+      0%, 100% { opacity: 0.55; width: 150%; height: 150%; }
+      50%      { opacity: 1; width: 168%; height: 168%; }
+    }
+    @keyframes gattiPop {
+      0%   { transform: scale(1); }
+      35%  { transform: scale(1.35) rotate(-6deg); }
+      70%  { transform: scale(0.95) rotate(4deg); }
+      100% { transform: scale(1.12); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .token.gatti .token-inner::after { animation: none; }
     }
 
     /* ---- Floating "BOOP!" / "CHOWKA!" shouts over the board ---- */
@@ -887,6 +944,13 @@
           <button class="seg-btn" data-value="4" role="radio">4</button>
         </div>
       </div>
+      <div class="control-row" id="rulesRow">
+        <span class="control-label">Rules</span>
+        <div class="seg" id="rulesSeg" role="radiogroup" aria-label="Rules">
+          <button class="seg-btn" data-value="basic" role="radio">😊 Basic</button>
+          <button class="seg-btn" data-value="advanced" role="radio">🎓 Advanced</button>
+        </div>
+      </div>
       <div class="control-row" id="iconRow">
         <span class="control-label">Icons</span>
         <div class="icon-chips" id="iconChips"></div>
@@ -898,11 +962,16 @@
       <ul>
         <li>Throw the 4 shells. <b>Open mouths</b> count — 1, 2 or 3 steps.</li>
         <li>All four mouths is <b>CHOWKA (4)</b>, all four humps is <b>BAARA (8)</b> — both let you throw again!</li>
-        <li>Two friends together form a <b>gatti</b>. It moves on even throws at half speed: 2 → 1, 4 → 2, 8 → 4.</li>
         <li>Tap a bouncing friend to move them, or use <b>← →</b> and <b>Enter</b>.</li>
         <li>Land on someone and they go <b>BOOP</b> back home.</li>
         <li>The four <b>star squares</b> are safe — nobody can be booped there.</li>
         <li>Get all <b>4</b> friends to the lotus in the middle to win. 🪷</li>
+      </ul>
+      <p><b>Advanced rules 🎓</b></p>
+      <ul>
+        <li>You can only turn <b>inward</b> after you've booped someone.</li>
+        <li>Two friends on one square pair up as a <b>tollu</b> 🔗 — still boopable.</li>
+        <li>Roll a <b>2</b> to toughen a tollu into a <b>gatti</b> 🛡️: it moves together at half speed on even rolls (2 → 1, 4 → 2, 8 → 4), and only another gatti can pass or boop it.</li>
       </ul>
     </template>
 
@@ -1466,6 +1535,7 @@
      ============================================================ */
   const state = {
     mode: '1p',
+    advanced: false,
     playerCount: 2,
     players: [],
     avatarIds: loadAvatars(),
@@ -1684,6 +1754,7 @@
         el.style.setProperty('--pc', p.color);
         el.innerHTML = `<span class="ring"></span><span class="disc"></span>` +
                        `<span class="token-inner">${pawnMarkup(p)}</span>` +
+                       `<span class="gatti-badge"></span>` +
                        `<span class="pick-arrow">👇</span>`;
         el.addEventListener('click', () => onTokenClick(pi, ki));
         boardInner.appendChild(el);
@@ -1720,6 +1791,21 @@
         const el = tokenOf(t.pi, t.ki).el;
         el.style.left = (x + dx) + '%';
         el.style.top = (y + dy) + '%';
+      });
+    });
+    updatePairVisuals();
+  }
+
+  function updatePairVisuals() {
+    state.players.forEach((p, pi) => {
+      const per = friendsPerStep(pi);
+      p.pawns.forEach((step, ki) => {
+        const token = tokenOf(pi, ki);
+        if (!token) return;
+        const tough = state.advanced && p.tough[ki];
+        const tollu = state.advanced && !p.tough[ki] && step > 0 && step < LAST && per[step] >= 2;
+        token.el.classList.toggle('gatti', tough);
+        token.el.classList.toggle('tollu', tollu);
       });
     });
   }
@@ -1765,107 +1851,183 @@
   }
 
   /* ---------- Rules ---------- */
-  function gattiMembers(pi, ki) {
+  function friendsPerStep(pi) {
+    const per = {};
+    state.players[pi].pawns.forEach(step => {
+      if (step > 0 && step < LAST) per[step] = (per[step] || 0) + 1;
+    });
+    return per;
+  }
+
+  function tolluGroup(pi, ki) {
+    const p = state.players[pi], step = p.pawns[ki];
+    const group = [];
+    p.pawns.forEach((pawnStep, index) => { if (!p.tough[index] && pawnStep === step) group.push(index); });
+    return group;
+  }
+
+  function gattiGroup(pi, ki) {
+    const p = state.players[pi], step = p.pawns[ki];
+    const group = [];
+    p.pawns.forEach((pawnStep, index) => { if (p.tough[index] && pawnStep === step) group.push(index); });
+    return group.length ? group : [ki];
+  }
+
+  function isTolluPawn(pi, ki) {
+    const p = state.players[pi], step = p.pawns[ki];
+    return state.advanced && !p.tough[ki] && step > 0 && step < LAST && tolluGroup(pi, ki).length >= 2;
+  }
+
+  function opponentGattiAt(pi, cell) {
+    if (SAFE.has(key(cell))) return false;
+    return state.players.some((opponent, opponentIndex) => {
+      if (opponentIndex === pi) return false;
+      return opponent.pawns.some((step, ki) => opponent.tough[ki] && step > 0 && step < LAST && key(opponent.path[step]) === key(cell));
+    });
+  }
+
+  function pathHitsOpponentGatti(pi, fromStep, toStep) {
     const p = state.players[pi];
-    const step = p.pawns[ki];
-    if (step <= 0 || step >= LAST) return [ki];
-    const members = p.pawns.map((pawnStep, index) => pawnStep === step ? index : -1).filter(index => index >= 0);
-    return members.length === 2 ? members : [ki];
+    for (let step = fromStep + 1; step <= toStep && step < LAST; step++) {
+      if (opponentGattiAt(pi, p.path[step])) return true;
+    }
+    return false;
+  }
+
+  function resolveAction(pi, ki, roll) {
+    const p = state.players[pi];
+    if (state.advanced && roll === 2 && isTolluPawn(pi, ki)) {
+      return { type: 'toughen', unit: tolluGroup(pi, ki) };
+    }
+    const unit = state.advanced && p.tough[ki] ? gattiGroup(pi, ki) : [ki];
+    return { type: 'move', unit };
+  }
+
+  function selectionUnit(pi, ki, roll) {
+    return resolveAction(pi, ki, roll).unit;
   }
 
   function moveDistance(pi, ki, roll) {
-    return gattiMembers(pi, ki).length === 2 ? (roll % 2 === 0 ? roll / 2 : 0) : roll;
-  }
-
-  function selectionUnit(pi, ki) {
-    return gattiMembers(pi, ki);
+    if (!state.advanced || !state.players[pi].tough[ki]) return roll;
+    return roll % 2 === 0 ? roll / 2 : 0;
   }
 
   function legalMoves(pi, roll) {
     const p = state.players[pi];
     const out = [];
+    if (!state.advanced) {
+      p.pawns.forEach((step, ki) => {
+        if (step < LAST && step + roll <= LAST) out.push(ki);
+      });
+      return out;
+    }
     p.pawns.forEach((step, ki) => {
-      if (step >= LAST) return;              // already at the lotus
-      const members = gattiMembers(pi, ki);
-      if (members[0] !== ki) return;          // a gatti is one move, not two choices
-      const distance = moveDistance(pi, ki, roll);
-      if (distance && step + distance <= LAST) out.push(ki);  // must land exactly
+      if (step >= LAST) return;
+      if (roll === 2 && isTolluPawn(pi, ki)) { out.push(ki); return; }
+      const isGatti = p.tough[ki];
+      if (isGatti && roll % 2 !== 0) return;
+      const destination = step + moveDistance(pi, ki, roll);
+      if (destination > LAST) return;
+      if (!p.hasCaptured && step < 16 && destination >= 16) return;
+      if (destination < LAST && !isGatti && pathHitsOpponentGatti(pi, step, destination)) return;
+      out.push(ki);
     });
     return out;
   }
 
-  function captureAt(pi, cell) {
+  function captureAt(pi, cell, moverIsGatti) {
     if (SAFE.has(key(cell))) return [];
     const hits = [];
-    state.players.forEach((op, oi) => {
-      if (oi === pi) return;
-      op.pawns.forEach((step, ki) => {
-        if (step > 0 && step < LAST && key(op.path[step]) === key(cell)) hits.push({ oi, ki });
+    state.players.forEach((opponent, opponentIndex) => {
+      if (opponentIndex === pi) return;
+      opponent.pawns.forEach((step, ki) => {
+        if (step > 0 && step < LAST && key(opponent.path[step]) === key(cell)) {
+          if (state.advanced && !moverIsGatti && opponent.tough[ki]) return;
+          hits.push({ oi: opponentIndex, ki });
+        }
       });
     });
     return hits;
   }
 
-  /* ---------- Movement ---------- */
-  async function movePawn(pi, ki, roll) {
+  async function toughenPair(pi, unit) {
     const p = state.players[pi];
-    const from = p.pawns[ki];
-    const members = gattiMembers(pi, ki);
-    const distance = moveDistance(pi, ki, roll);
-    const movingTokens = members.map(member => tokenOf(pi, member));
-    movingTokens.forEach(tok => tok.el.classList.add('selected'));
+    unit.forEach(ki => { p.tough[ki] = true; });
+    layoutTokens();
+    applyLeans();
+    Sound.sfxSafe();
+    shout('GATTI! 🛡️', 'linear-gradient(135deg,#F5A623,#FFD54F)', p.path[p.pawns[unit[0]]]);
+    unit.forEach(ki => playAnim(innerOf(pi, ki), 'gattiPop 0.55s var(--bounce)'));
+    await sleep(600);
+    unit.forEach(ki => setIdle(pi, ki));
+  }
 
-    for (let s = from + 1; s <= from + distance; s++) {
-      members.forEach(member => { p.pawns[member] = s; });
+  /* ---------- Movement ---------- */
+  async function movePawnUnit(pi, unit, roll) {
+    const p = state.players[pi];
+    const from = p.pawns[unit[0]];
+    const moverIsGatti = state.advanced && p.tough[unit[0]];
+    const distance = moveDistance(pi, unit[0], roll);
+    unit.forEach(ki => tokenOf(pi, ki).el.classList.add('selected'));
+
+    for (let step = from + 1; step <= from + distance; step++) {
+      unit.forEach(ki => { p.pawns[ki] = step; });
       layoutTokens();
       applyLeans();
-      members.forEach(member => playAnim(innerOf(pi, member), 'hopAnim 0.22s ease'));
+      unit.forEach(ki => playAnim(innerOf(pi, ki), 'hopAnim 0.22s ease'));
       Sound.sfxHop();
       await sleep(215);
     }
-    members.forEach(member => setIdle(pi, member));
+    unit.forEach(ki => setIdle(pi, ki));
 
-    const landed = p.path[p.pawns[ki]];
-
-    if (p.pawns[ki] === LAST) {
+    const landStep = p.pawns[unit[0]];
+    const landed = p.path[landStep];
+    if (landStep === LAST) {
       Sound.sfxHome();
-      shout('HOME! 🪷', 'linear-gradient(135deg,#F59E0B,#FDE047)', landed);
-      movingTokens.forEach(tok => tok.el.classList.remove('selected'));
-      members.forEach(member => playAnim(innerOf(pi, member), 'bloom 0.8s ease forwards'));
+      shout(unit.length > 1 ? 'HOME! 🪷🪷' : 'HOME! 🪷', 'linear-gradient(135deg,#F59E0B,#FDE047)', landed);
+      unit.forEach(ki => {
+        const token = tokenOf(pi, ki);
+        token.el.classList.remove('selected', 'gatti', 'tollu');
+        playAnim(innerOf(pi, ki), 'bloom 0.8s ease forwards');
+      });
       await sleep(760);
-      movingTokens.forEach(tok => { tok.el.style.display = 'none'; });
-      p.done += members.length;
+      unit.forEach(ki => {
+        tokenOf(pi, ki).el.style.display = 'none';
+        p.tough[ki] = false;
+        p.done++;
+      });
       renderStrip();
-      fireworkShow(2, 110, 260, screenPos(CENTRE));
+      fireworkShow(unit.length > 1 ? 3 : 2, 110, 260, screenPos(CENTRE));
       await sleep(300);
       return;
     }
 
     Sound.sfxLand();
-
-    const hits = captureAt(pi, landed);
+    const hits = captureAt(pi, landed, moverIsGatti);
     if (hits.length) {
+      p.hasCaptured = true;
       Sound.sfxBoop();
       shout('BOOP!', 'linear-gradient(135deg,#F43F8A,#FB7185)', landed);
-      for (const h of hits) {
-        const ht = tokenOf(h.oi, h.ki);
-        playAnim(ht.el.querySelector('.token-inner'), 'boopAway 0.6s ease forwards');
+      for (const hit of hits) {
+        const token = tokenOf(hit.oi, hit.ki);
+        playAnim(token.el.querySelector('.token-inner'), 'boopAway 0.6s ease forwards');
       }
       await sleep(620);
-      for (const h of hits) {
-        state.players[h.oi].pawns[h.ki] = 0;
-        const inner = tokenOf(h.oi, h.ki).el.querySelector('.token-inner');
+      for (const hit of hits) {
+        state.players[hit.oi].pawns[hit.ki] = 0;
+        state.players[hit.oi].tough[hit.ki] = false;
+        const inner = tokenOf(hit.oi, hit.ki).el.querySelector('.token-inner');
         layoutTokens();
         applyLeans();
         playAnim(inner, 'landPop 0.42s var(--bounce) forwards');
       }
       await sleep(440);
-      hits.forEach(h => setIdle(h.oi, h.ki));
+      hits.forEach(hit => setIdle(hit.oi, hit.ki));
     } else if (SAFE.has(key(landed))) {
       Sound.sfxSafe();
     }
 
-    movingTokens.forEach(tok => tok.el.classList.remove('selected'));
+    unit.forEach(ki => tokenOf(pi, ki).el.classList.remove('selected'));
     await sleep(120);
   }
 
@@ -1894,7 +2056,7 @@
     state.movable = legalMoves(state.current, state.roll);
     state.sel = 0;
     state.movable.forEach(ki => {
-      selectionUnit(state.current, ki).forEach(member => tokenOf(state.current, member).el.classList.add('movable'));
+      selectionUnit(state.current, ki, state.roll).forEach(member => tokenOf(state.current, member).el.classList.add('movable'));
     });
     updateSelection();
   }
@@ -1903,7 +2065,7 @@
     tokens.forEach(t => t.el.classList.remove('selected'));
     if (state.phase !== 'choose' || !state.movable.length) return;
     const ki = state.movable[state.sel % state.movable.length];
-    selectionUnit(state.current, ki).forEach(member => tokenOf(state.current, member).el.classList.add('selected'));
+    selectionUnit(state.current, ki, state.roll).forEach(member => tokenOf(state.current, member).el.classList.add('selected'));
   }
 
   function cycleSelection(dir) {
@@ -1916,7 +2078,7 @@
   function onTokenClick(pi, ki) {
     if (state.phase !== 'choose' || pi !== state.current) return;
     if (isComputer(state.current)) return;
-    const move = state.movable.find(moveIndex => selectionUnit(pi, moveIndex).includes(ki));
+    const move = state.movable.find(moveIndex => selectionUnit(pi, moveIndex, state.roll).includes(ki));
     if (move === undefined) return;
     state.sel = state.movable.indexOf(move);
     commitMove(move);
@@ -1935,7 +2097,9 @@
     const pi = state.current;
     const roll = state.roll;
 
-    await movePawn(pi, ki, roll);
+    const action = resolveAction(pi, ki, roll);
+    if (action.type === 'toughen') await toughenPair(pi, action.unit);
+    else await movePawnUnit(pi, action.unit, roll);
 
     const p = state.players[pi];
     if (p.done >= 4) { finish(pi); return; }
@@ -2034,12 +2198,18 @@
     const p = state.players[pi];
     let best = moves[0], bestScore = -Infinity;
     moves.forEach(ki => {
-      const dest = p.pawns[ki] + moveDistance(pi, ki, roll);
-      const cell = p.path[dest];
-      let score = dest;
-      if (dest === LAST) score += 100;
-      if (captureAt(pi, cell).length) score += 60;
-      if (SAFE.has(key(cell))) score += 12;
+      let score;
+      if (state.advanced && roll === 2 && isTolluPawn(pi, ki)) {
+        score = 45;
+      } else {
+        const isGatti = state.advanced && p.tough[ki];
+        const destination = p.pawns[ki] + moveDistance(pi, ki, roll);
+        const cell = p.path[destination];
+        score = destination;
+        if (destination === LAST) score += 100;
+        if (captureAt(pi, cell, isGatti).length) score += 60;
+        if (SAFE.has(key(cell))) score += 12;
+      }
       if (score > bestScore) { bestScore = score; best = ki; }
     });
     return best;
@@ -2154,6 +2324,8 @@
       p.home = HOME_IDX[i];
       p.path = pathFor(p.home);
       p.pawns = [0, 0, 0, 0];
+      p.tough = [false, false, false, false];
+      p.hasCaptured = false;
       p.done = 0;
     });
     state.players = list;
@@ -2366,6 +2538,7 @@
     resetGame();
   });
   wireSeg(countSeg, '2', (val) => { state.playerCount = +val; resetGame(); });
+  wireSeg($('#rulesSeg'), 'basic', (val) => { state.advanced = (val === 'advanced'); resetGame(); });
 
   async function enterGameplay() {
     if (state.started) return;
